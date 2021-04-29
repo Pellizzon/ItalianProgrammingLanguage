@@ -1,4 +1,4 @@
-# APSLogica
+# JavaScript in Italian (con alcuni adattamenti) EBNF
 
 EBNF
 ```
