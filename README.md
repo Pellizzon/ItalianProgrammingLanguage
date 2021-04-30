@@ -1,4 +1,4 @@
-# JavaScript in Italian (con alcuni adattamenti) EBNF
+# JavaScript in Italiano :pinched_fingers: (con alcuni adattamenti) EBNF
 
 EBNF
 ```
