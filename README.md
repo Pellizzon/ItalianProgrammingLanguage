@@ -17,10 +17,10 @@ READ = "leggere", "(", ")";
 IFSTMT = "se", "(", OREXPR, ")", COMMAND ["altro", COMMAND] ;
 WHILESTMT = "mentre", "(", OREXPR, ")", COMMAND ;
 
-OREXPR = ANDEXPR ["o", ANDEXPR] ;
-ANDEXPR = EQEXPR ["e", EQEXPR] ;
-EQEXPR = RELEXPR [("==" | "!="), EQEXPR] ;
-RELEXPR = EXPRESSION [(">" | "<" | "<=" | ">="), EXPRESSION] ;
+OREXPR = ANDEXPR { "o", ANDEXPR } ;
+ANDEXPR = EQEXPR { "e", EQEXPR } ;
+EQEXPR = RELEXPR { ("==" | "!="), EQEXPR } ;
+RELEXPR = EXPRESSION { (">" | "<" | "<=" | ">="), EXPRESSION } ;
 
 EXPRESSION = TERM, { ("+" | "-"), TERM } ;
 TERM = FACTOR, { ("*" | "/"), FACTOR } ;
