@@ -10,7 +10,7 @@ ARGUMENTS = [IDENTIFIER], {",", ARGUMENTS} ;
 FUNCTIONCALL = IDENTIFIER, "(", [OREXPR], {",", OREXPR},")";
 RETURN = "ritorna", [OREXPR]; 
 
-FORSTMT = "per", "(", ASSIGNMENT, ";", OREXPR, ";", EXPRESSION, ")", COMMAND ;
+FORSTMT = "per", "(", ASSIGNMENT, ";", OREXPR, ";", ASSIGNMENT, ")", COMMAND ;
 
 ASSIGNMENT = IDENTIFIER, "=", OREXPR ;
 PRINT = "stampa", "(", OREXPR, ")" ;
