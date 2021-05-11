@@ -32,3 +32,11 @@ NUMBER = DIGIT, { DIGIT } ;
 LETTER = ( a | ... | z | A | ... | Z ) ;
 DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
 ```
+
+Referenze:
+
+- https://joshsharp.com.au/blog/rpython-rply-interpreter-1.html
+
+- https://stackoverflow.com/questions/60016733/how-to-parse-multiple-line-code-using-rply-library
+
+- https://blog.usejournal.com/writing-your-own-programming-language-and-compiler-with-python-a468970ae6df

@@ -40,11 +40,11 @@ class LogicalOp(Node):
         firstChildEval = self.children[0].Evaluate()
         secondChildEval = self.children[1].Evaluate()
 
-        if self.value == "LESS":
+        if self.value == "SMALLER":
             evaluate = firstChildEval < secondChildEval
         elif self.value == "BIGGER":
             evaluate = firstChildEval > secondChildEval
-        elif self.value == "LESS_EQ":
+        elif self.value == "SMALLER_EQ":
             evaluate = firstChildEval <= secondChildEval
         elif self.value == "BIGGER_EQ":
             evaluate = firstChildEval >= secondChildEval
@@ -113,6 +113,18 @@ class While(Node):
         while self.children[0].Evaluate():
             # block or command child
             self.children[1].Evaluate()
+
+
+class For(Node):
+    def Evaluate(self):
+        # conditional child
+        self.children[0].Evaluate()
+        # for condition
+        while self.children[1].Evaluate():
+            # code to execute
+            self.children[3].Evaluate()
+            # increment of the declared variable
+            self.children[2].Evaluate()
 
 
 class If(Node):

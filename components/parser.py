@@ -1,6 +1,4 @@
-from components.preprocessor import PrePro
-from components.token import Token
-from components.tokenizer import Tokenizer
+from rply import ParserGenerator, Token
 from components.node import (
     BinOp,
     IntVal,
@@ -14,221 +12,196 @@ from components.node import (
     LogicalOp,
     While,
     If,
+    For,
 )
 from components.symbolTable import SymbolTable
 
 
+ALPHABET = [
+    # Logical Operators
+    "AND",
+    "OR",
+    "EQUAL",
+    "NOT_EQUAL",
+    "BIGGER_EQ",
+    "BIGGER",
+    "SMALLER_EQ",
+    "SMALLER",
+    # Assignment
+    "ASSIGN",
+    # Function
+    "DEF_FUNC",
+    "RETURN",
+    "COMMA",
+    # If/Else, While, for
+    "IF",
+    "ELSE",
+    "WHILE",
+    "FOR",
+    # Binary and Unary Operators
+    "PLUS",
+    "MINUS",
+    "MULT",
+    "DIV",
+    "NOT",
+    # Print
+    "PRINT",
+    # Input
+    "READ",
+    # Number
+    "INTEGER",
+    # Identifier
+    "IDENTIFIER",
+    # Parenthesis
+    "OPEN_PAR",
+    "CLOSE_PAR",
+    # Brace
+    "OPEN_BRACE",
+    "CLOSE_BRACE",
+    # Semicolon
+    "SEMICOLON",
+]
+
+
 class Parser:
     def __init__(self):
-        self.tokens = None
+        self.pg = ParserGenerator(ALPHABET)
 
-    def parseFactor(self):
-        self.tokens.nextToken()
-        if self.tokens.actual.type == "INT":
-            return IntVal(self.tokens.actual.value)
-        elif self.tokens.actual.type in ["PLUS", "MINUS", "NOT"]:
-            return UnOp(self.tokens.actual.type, [self.parseFactor()])
-        elif self.tokens.actual.type == "LPAR":
-            exp = self.parseOrExpr()
-            if self.tokens.actual.type == "RPAR":
-                return exp
+    def parse(self):
+        @self.pg.production("wrapper : OPEN_BRACE block CLOSE_BRACE")
+        def wrapper(p):
+            return p[1]
+
+        @self.pg.production("block : command")
+        @self.pg.production("block : block command")
+        def block(p):
+            # initial block declaration
+            if len(p) == 1:
+                return Block(None, [p[0]])
+            # adds other commands to block
+            p[0].children += [p[1]]
+            return p[0]
+
+        @self.pg.production("command : assignment SEMICOLON")
+        @self.pg.production("command : print SEMICOLON")
+        @self.pg.production("command : ifstmt")
+        @self.pg.production("command : whilestmt")
+        @self.pg.production("command : forstmt")
+        @self.pg.production("command : wrapper")
+        @self.pg.production("command : SEMICOLON")
+        def command(p):
+            if isinstance(p[0], Token):
+                return NoOp(None)
+            return p[0]
+
+        @self.pg.production("ifstmt : IF OPEN_PAR orexpr CLOSE_PAR command")
+        @self.pg.production(
+            "ifstmt : IF OPEN_PAR orexpr CLOSE_PAR command ELSE command"
+        )
+        def ifstmt(p):
+            if len(p) == 5:
+                return If(None, [p[2], p[4]])
+            elif len(p) == 7:
+                return If(None, [p[2], p[4], p[6]])
             else:
-                raise ValueError("Could not close parenthesis")
-        elif self.tokens.actual.type == "IDENTIFIER":
-            return Identifier(self.tokens.actual.value)
-        elif self.tokens.actual.type == "READ":
-            self.tokens.nextToken()
-            if self.tokens.actual.value != "(":
-                raise ValueError("readln must be followed by (")
-            self.tokens.nextToken()
-            if self.tokens.actual.value != ")":
-                raise ValueError("readln( must be followed by )")
-            return Read(None)
-        else:
-            raise ValueError("Cannot parse Factor")
+                raise ValueError("Chegou onde não devia em ifstmt")
 
-    def parseTerm(self):
-        resultado = self.parseFactor()
-        self.tokens.nextToken()
-        while self.tokens.actual.type in ["MULT", "DIV"]:
-            if self.tokens.actual.type in ["MULT", "DIV"]:
-                resultado = BinOp(
-                    self.tokens.actual.type, [resultado, self.parseFactor()]
-                )
+        @self.pg.production("whilestmt : WHILE OPEN_PAR orexpr CLOSE_PAR command")
+        def whilestmt(p):
+            return While(None, [p[2], p[4]])
+
+        @self.pg.production(
+            "forstmt : FOR OPEN_PAR assignment SEMICOLON orexpr SEMICOLON assignment CLOSE_PAR command"
+        )
+        def forstmt(p):
+            print(p)
+            return For(None, [p[2], p[4], p[6], p[8]])
+
+        @self.pg.production("assignment : IDENTIFIER ASSIGN orexpr")
+        def assignment(p):
+            return Assign(p[0].value, [p[2]])
+
+        @self.pg.production("print : PRINT OPEN_PAR orexpr CLOSE_PAR")
+        def print_prod(p):
+            return Print(None, [p[2]])
+
+        @self.pg.production("orexpr : andexpr")
+        @self.pg.production("orexpr : andexpr OR orexpr")
+        def orexrp(p):
+            if len(p) == 1:
+                return p[0]
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("andexpr : eqexpr")
+        @self.pg.production("andexpr : eqexpr AND andexpr")
+        def andexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("eqexpr : relexpr")
+        @self.pg.production("eqexpr : relexpr EQUAL eqexpr")
+        @self.pg.production("eqexpr : relexpr NOT_EQUAL eqexpr")
+        def eqexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("relexpr : expression")
+        @self.pg.production("relexpr : expression BIGGER relexpr")
+        @self.pg.production("relexpr : expression BIGGER_EQ relexpr")
+        @self.pg.production("relexpr : expression SMALLER relexpr")
+        @self.pg.production("relexpr : expression SMALLER_EQ relexpr")
+        def relexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+
+        #                                 p[0] p[1]  p[2]
+        @self.pg.production("expression : term PLUS expression ")
+        @self.pg.production("expression : term MINUS expression")
+        @self.pg.production("expression : term")
+        def expression(p):
+            if len(p) == 1:
+                return p[0]
+
+            return BinOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("term : factor MULT term")
+        @self.pg.production("term : factor DIV term")
+        @self.pg.production("term : factor ")
+        def term(p):
+            if len(p) == 1:
+                return p[0]
+            return BinOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("factor : INTEGER")
+        @self.pg.production("factor : IDENTIFIER")
+        @self.pg.production("factor : NOT factor")
+        @self.pg.production("factor : PLUS factor")
+        @self.pg.production("factor : MINUS factor")
+        @self.pg.production("factor : OPEN_PAR orexpr CLOSE_PAR")
+        @self.pg.production("factor : READ OPEN_PAR CLOSE_PAR")
+        def factor(p):
+            if len(p) == 1:
+                if p[0].gettokentype() == "INTEGER":
+                    return IntVal(int(p[0].value))
+                elif p[0].gettokentype() == "IDENTIFIER":
+                    return Identifier(p[0].value)
+
+            if len(p) == 2:
+                return UnOp(p[0].gettokentype(), [p[1]])
+
+            elif len(p) == 3:
+                if p[0].gettokentype() == "READ":
+                    return Read(None)
+                return p[1]
             else:
-                raise ValueError("Could not complete parseTerm")
-            self.tokens.nextToken()
-        return resultado
+                raise ValueError("Chegou onde não devia em factor")
 
-    def parseExpression(self):
-        result = self.parseTerm()
-        while self.tokens.actual.type in ["PLUS", "MINUS"]:
-            if self.tokens.actual.type in ["PLUS", "MINUS"]:
-                result = BinOp(self.tokens.actual.type, [result, self.parseTerm()])
-            else:
-                raise ValueError("Error: it never should reach this")
-        return result
+        @self.pg.error
+        def error_handle(token):
+            raise ValueError(token)
 
-    def parseRelExpr(self):
-        result = self.parseExpression()
-        while self.tokens.actual.type in ["LESSTHAN", "BIGGERTHAN"]:
-            if self.tokens.actual.type in ["LESSTHAN", "BIGGERTHAN"]:
-                result = LogicalOp(
-                    self.tokens.actual.type, [result, self.parseExpression()]
-                )
-            else:
-                raise ValueError("Error: it never should reach this")
-        return result
-
-    def parseEqExpr(self):
-        result = self.parseRelExpr()
-        while self.tokens.actual.type in ["EQOP"]:
-            if self.tokens.actual.type in ["EQOP"]:
-                result = LogicalOp(
-                    self.tokens.actual.type, [result, self.parseRelExpr()]
-                )
-            else:
-                raise ValueError("Error: it never should reach this")
-        return result
-
-    def parseAndExpr(self):
-        result = self.parseEqExpr()
-        while self.tokens.actual.type in ["AND"]:
-            if self.tokens.actual.type in ["AND"]:
-                result = LogicalOp(
-                    self.tokens.actual.type, [result, self.parseEqExpr()]
-                )
-            else:
-                raise ValueError("Error: it never should reach this")
-        return result
-
-    def parseOrExpr(self):
-        result = self.parseAndExpr()
-        while self.tokens.actual.type in ["OR"]:
-            if self.tokens.actual.type in ["OR"]:
-                result = LogicalOp(
-                    self.tokens.actual.type, [result, self.parseAndExpr()]
-                )
-            else:
-                raise ValueError("Error: it never should reach this")
-        return result
-
-    def parseCommand(self):
-        if self.tokens.actual.type == "IDENTIFIER":
-            identifier = self.tokens.actual.value
-            self.tokens.nextToken()
-            if self.tokens.actual.type != "EQUAL":
-                raise ValueError(
-                    f"Variable assignments must be followed by '=', but got '{self.tokens.actual.value}'"
-                )
-            result = Assign(identifier, [self.parseOrExpr()])
-
-            if (self.tokens.actual.value) != ";":
-                raise ValueError(
-                    f"Commands must end with ';', but got '{self.tokens.actual.value}'"
-                )
-            self.tokens.nextToken()
-
-        elif self.tokens.actual.type == "PRINT":
-            self.tokens.nextToken()
-            if self.tokens.actual.type != "LPAR":
-                raise ValueError(
-                    f"println must be followed by '(', got '{self.tokens.actual.value}'"
-                )
-            result = Print(None, [self.parseOrExpr()])
-            if self.tokens.actual.type != "RPAR":
-                raise ValueError(
-                    f"println must end with ')', got '{self.tokens.actual.value}'"
-                )
-            self.tokens.nextToken()
-
-            if (self.tokens.actual.value) != ";":
-                raise ValueError(
-                    f"Commands must end with ';', but got '{self.tokens.actual.value}'"
-                )
-
-            self.tokens.nextToken()
-
-        elif self.tokens.actual.type == "WHILE":
-            self.tokens.nextToken()
-            if self.tokens.actual.type != "LPAR":
-                raise ValueError(
-                    f"println must be followed by '(', got '{self.tokens.actual.value}'"
-                )
-            orExpr = self.parseOrExpr()
-            if self.tokens.actual.type != "RPAR":
-                raise ValueError(
-                    f"println must end with ')', got '{self.tokens.actual.value}'"
-                )
-            self.tokens.nextToken()
-            result = While(None, [orExpr, self.parseCommand()])
-
-        elif self.tokens.actual.type == "IF":
-            self.tokens.nextToken()
-            if self.tokens.actual.type != "LPAR":
-                raise ValueError(
-                    f"println must be followed by '(', got '{self.tokens.actual.value}'"
-                )
-            orExpr = self.parseOrExpr()
-            if self.tokens.actual.type != "RPAR":
-                raise ValueError(
-                    f"println must end with ')', got '{self.tokens.actual.value}'"
-                )
-            self.tokens.nextToken()
-            trueBlock = self.parseCommand()
-            result = If(None, [orExpr, trueBlock])
-
-            if self.tokens.actual.type == "ELSE":
-                self.tokens.nextToken()
-                falseBlock = self.parseCommand()
-                result = If(None, [orExpr, trueBlock, falseBlock])
-            else:
-                pass
-
-        elif self.tokens.actual.value == "{":
-            result = self.parseBlock()
-            self.tokens.nextToken()
-
-        else:
-            result = NoOp(None)
-            # cases like +1+2*2; enter here
-            # they would raise errors on the next if ";".
-            # just to manage errors more precisely, some will be treated here
-            if (str(self.tokens.actual.value) in "()+-*/=") or (
-                self.tokens.actual.type == "INT"
-            ):
-                raise ValueError(
-                    "Commands must be Assignments or Prints, Ifs or Whiles"
-                )
-
-            if (self.tokens.actual.value) != ";":
-                raise ValueError(
-                    f"Commands must end with ';', but got '{self.tokens.actual.value}'"
-                )
-            self.tokens.nextToken()
-
-        return result
-
-    def parseBlock(self):
-        if self.tokens.actual.value != "{":
-            raise ValueError("Block must start with '{'")
-        executedCommands = []
-        self.tokens.nextToken()
-        while self.tokens.actual.value != "}":
-            executedCommands += [self.parseCommand()]
-
-        return Block(None, executedCommands)
-
-    def run(self, code):
-        code = PrePro(code).filter()
-        PrePro(code).check_PAR_balance()
-        self.tokens = Tokenizer(code)
-        self.tokens.tokenize()
-
-        self.tokens.nextToken()
-        result = self.parseBlock()
-        self.tokens.nextToken()
-
-        if self.tokens.actual.type != "EOF":
-            raise ValueError("Did not reach EOF")
-        return result
+    def get_parser(self):
+        return self.pg.build()

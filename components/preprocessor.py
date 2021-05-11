@@ -1,7 +1,7 @@
 import re
 
 
-class PrePro:
+class PreProcessor:
     def __init__(self, initCode):
         self.code = initCode
 

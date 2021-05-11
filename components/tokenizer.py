@@ -38,15 +38,16 @@ class Lexer:
         # Input
         self.lexer.add("READ", r"leggere" + checkReservedWordEnd)
         # Identifier
+        self.lexer.add("VAR", r"var" + checkReservedWordEnd)
         self.lexer.add("IDENTIFIER", r"[a-zA-Z][a-zA-Z0-9_]*")
         # Number
         self.lexer.add("INTEGER", r"\d+")
         # Parenthesis
         self.lexer.add("OPEN_PAR", r"\(")
         self.lexer.add("CLOSE_PAR", r"\)")
-        # Brackets
-        self.lexer.add("OPEN_BRACKET", r"\{")
-        self.lexer.add("CLOSE_BRACKET", r"\}")
+        # Braces
+        self.lexer.add("OPEN_BRACE", r"\{")
+        self.lexer.add("CLOSE_BRACE", r"\}")
         # Semicolon
         self.lexer.add("SEMICOLON", r"\;")
         # Spaces
