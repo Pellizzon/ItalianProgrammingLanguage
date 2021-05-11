@@ -114,7 +114,6 @@ class Parser:
             "forstmt : FOR OPEN_PAR assignment SEMICOLON orexpr SEMICOLON assignment CLOSE_PAR command"
         )
         def forstmt(p):
-            print(p)
             return For(None, [p[2], p[4], p[6], p[8]])
 
         @self.pg.production("assignment : IDENTIFIER ASSIGN orexpr")
