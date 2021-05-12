@@ -100,7 +100,7 @@ class Parser:
         )
         def ifstmt(p):
             if len(p) == 5:
-                return If(None, [p[2], p[4]])
+                return If(None, [p[2], p[4], NoOp(None)])
             elif len(p) == 7:
                 return If(None, [p[2], p[4], p[6]])
             else:
