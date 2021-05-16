@@ -64,12 +64,10 @@ ALPHABET = [
     "SEMICOLON",
 ]
 
-PRECEDENCE = [("left", ["PLUS", "MINUS"]), ("left", ["MULT", "DIV"])]
-
 
 class Parser:
     def __init__(self, module, builder, printf):
-        self.pg = ParserGenerator(ALPHABET, PRECEDENCE)
+        self.pg = ParserGenerator(ALPHABET)
         self.module = module
         self.builder = builder
         self.printf = printf
