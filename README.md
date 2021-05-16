@@ -1,6 +1,6 @@
 # JavaScript in Italiano (con alcuni adattamenti) EBNF
 
-llvmlite:
+### llvmlite:
 
 ```conda install --channel=numba llvmlite```
 
@@ -8,10 +8,14 @@ o
 
 ```pip install numba```
 
+### Running a program:
+```./run.sh <file>```
+
 EBNF
 ```
-BLOCK = { "{", COMMAND, "}" } ;
-COMMAND = ( λ | ASSIGNMENT | PRINT | READ | FUNCTIONCALL | RETURN), ";" | BLOCK | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT;
+WRAPPER = { "{" block "}" }
+BLOCK = command | block command ;
+COMMAND = ( λ | ASSIGNMENT | PRINT | FUNCTIONCALL | RETURN), ";" | BLOCK | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT;
 
 FUNCTIONDEF = "funzione", IDENTIFIER, "(", ARGUMENTS, ")", BLOCK ;
 ARGUMENTS = [IDENTIFIER], {",", ARGUMENTS} ;
@@ -20,7 +24,7 @@ RETURN = "ritorna", [OREXPR];
 
 FORSTMT = "per", "(", ASSIGNMENT, ";", OREXPR, ";", ASSIGNMENT, ")", COMMAND ;
 
-ASSIGNMENT = IDENTIFIER, "=", OREXPR ;
+ASSIGNMENT = ["var"], IDENTIFIER, "=", OREXPR ;
 PRINT = "stampa", "(", OREXPR, ")" ;
 READ = "leggere", "(", ")";
 
@@ -48,3 +52,9 @@ Referenze:
 - https://stackoverflow.com/questions/60016733/how-to-parse-multiple-line-code-using-rply-library
 
 - https://blog.usejournal.com/writing-your-own-programming-language-and-compiler-with-python-a468970ae6df
+
+- https://llvmlite.readthedocs.io/en/latest/user-guide/ir/ir-builder.html
+
+- https://gist.github.com/sklam/eb89eab5b5708f03d0b971136a9806f4
+
+- https://github.com/symhom/Kaleidoscope_Compiler/blob/master/short_llvmlite_examples/while_loop_example.py

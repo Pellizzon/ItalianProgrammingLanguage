@@ -64,12 +64,18 @@ ALPHABET = [
     "SEMICOLON",
 ]
 
+PRECEDENCE = [("left", ["PLUS", "MINUS"]), ("left", ["MULT", "DIV"])]
+
 
 class Parser:
-    def __init__(self):
-        self.pg = ParserGenerator(ALPHABET)
+    def __init__(self, module, builder, printf):
+        self.pg = ParserGenerator(ALPHABET, PRECEDENCE)
+        self.module = module
+        self.builder = builder
+        self.printf = printf
 
     def parse(self):
+        #                                 p[0]    p[1]     p[2]
         @self.pg.production("wrapper : OPEN_BRACE block CLOSE_BRACE")
         def wrapper(p):
             return p[1]
@@ -79,7 +85,7 @@ class Parser:
         def block(p):
             # initial block declaration
             if len(p) == 1:
-                return Block(None, [p[0]])
+                return Block(self.module, self.builder, None, [p[0]])
             # adds other commands to block
             p[0].children += [p[1]]
             return p[0]
@@ -92,8 +98,9 @@ class Parser:
         @self.pg.production("command : wrapper")
         @self.pg.production("command : SEMICOLON")
         def command(p):
+            # case SEMICOLON
             if isinstance(p[0], Token):
-                return NoOp(None)
+                return NoOp(None, None, None)
             return p[0]
 
         @self.pg.production("ifstmt : IF OPEN_PAR orexpr CLOSE_PAR command")
@@ -102,82 +109,94 @@ class Parser:
         )
         def ifstmt(p):
             if len(p) == 5:
-                return If(None, [p[2], p[4], NoOp(None)])
+                return If(
+                    self.module,
+                    self.builder,
+                    None,
+                    [p[2], p[4], NoOp(None, None, None)],
+                )
             elif len(p) == 7:
-                return If(None, [p[2], p[4], p[6]])
+                return If(self.module, self.builder, None, [p[2], p[4], p[6]])
             else:
-                raise ValueError("Chegou onde não devia em ifstmt")
+                raise ValueError("Should not reach this (ifstmt)")
 
         @self.pg.production("whilestmt : WHILE OPEN_PAR orexpr CLOSE_PAR command")
         def whilestmt(p):
-            return While(None, [p[2], p[4]])
+            return While(self.module, self.builder, None, [p[2], p[4]])
 
         @self.pg.production(
             "forstmt : FOR OPEN_PAR assignment SEMICOLON orexpr SEMICOLON assignment CLOSE_PAR command"
         )
         def forstmt(p):
-            return For(None, [p[2], p[4], p[6], p[8]])
+            return For(self.module, self.builder, None, [p[2], p[4], p[6], p[8]])
 
         @self.pg.production("assignment : VAR IDENTIFIER ASSIGN orexpr")
         @self.pg.production("assignment : IDENTIFIER ASSIGN orexpr")
         def assignment(p):
             if len(p) == 4:
-                return Declare(p[1].value, [p[3]])
-            return Assign(p[0].value, [p[2]])
+                return Declare(self.module, self.builder, p[1].value, [p[3]])
+            return Assign(self.module, self.builder, p[0].value, [p[2]])
 
         @self.pg.production("print : PRINT OPEN_PAR orexpr CLOSE_PAR")
         def print_prod(p):
-            return Print(None, [p[2]])
+            return Print(self.module, self.builder, None, [p[2]], self.printf)
 
         @self.pg.production("orexpr : andexpr")
-        @self.pg.production("orexpr : andexpr OR orexpr")
+        @self.pg.production("orexpr : orexpr OR andexpr")
         def orexrp(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+            return LogicalOp(
+                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
+            )
 
         @self.pg.production("andexpr : eqexpr")
-        @self.pg.production("andexpr : eqexpr AND andexpr")
+        @self.pg.production("andexpr : andexpr AND eqexpr")
         def andexpr(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+            return LogicalOp(
+                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
+            )
 
         @self.pg.production("eqexpr : relexpr")
-        @self.pg.production("eqexpr : relexpr EQUAL eqexpr")
-        @self.pg.production("eqexpr : relexpr NOT_EQUAL eqexpr")
+        @self.pg.production("eqexpr : eqexpr EQUAL relexpr")
+        @self.pg.production("eqexpr : eqexpr NOT_EQUAL relexpr")
         def eqexpr(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+            return LogicalOp(
+                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
+            )
 
         @self.pg.production("relexpr : expression")
-        @self.pg.production("relexpr : expression BIGGER relexpr")
-        @self.pg.production("relexpr : expression BIGGER_EQ relexpr")
-        @self.pg.production("relexpr : expression SMALLER relexpr")
-        @self.pg.production("relexpr : expression SMALLER_EQ relexpr")
+        @self.pg.production("relexpr : relexpr BIGGER expression")
+        @self.pg.production("relexpr : relexpr BIGGER_EQ expression")
+        @self.pg.production("relexpr : relexpr SMALLER expression")
+        @self.pg.production("relexpr : relexpr SMALLER_EQ expression")
         def relexpr(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+            return LogicalOp(
+                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
+            )
 
-        #                                 p[0] p[1]  p[2]
-        @self.pg.production("expression : term PLUS expression ")
-        @self.pg.production("expression : term MINUS expression")
+        @self.pg.production("expression : expression PLUS term ")
+        @self.pg.production("expression : expression MINUS term")
         @self.pg.production("expression : term")
         def expression(p):
             if len(p) == 1:
                 return p[0]
 
-            return BinOp(p[1].gettokentype(), [p[0], p[2]])
+            return BinOp(self.module, self.builder, p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("term : factor MULT term")
-        @self.pg.production("term : factor DIV term")
+        @self.pg.production("term : term MULT factor")
+        @self.pg.production("term : term DIV factor")
         @self.pg.production("term : factor ")
         def term(p):
             if len(p) == 1:
                 return p[0]
-            return BinOp(p[1].gettokentype(), [p[0], p[2]])
+            return BinOp(self.module, self.builder, p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("factor : INTEGER")
         @self.pg.production("factor : IDENTIFIER")
@@ -189,16 +208,16 @@ class Parser:
         def factor(p):
             if len(p) == 1:
                 if p[0].gettokentype() == "INTEGER":
-                    return IntVal(int(p[0].value))
+                    return IntVal(self.module, self.builder, int(p[0].value))
                 elif p[0].gettokentype() == "IDENTIFIER":
-                    return Identifier(p[0].value)
+                    return Identifier(self.module, self.builder, p[0].value)
 
             if len(p) == 2:
-                return UnOp(p[0].gettokentype(), [p[1]])
+                return UnOp(self.module, self.builder, p[0].gettokentype(), [p[1]])
 
             elif len(p) == 3:
                 if p[0].gettokentype() == "READ":
-                    return Read(None)
+                    return Read(self.module, self.builder, None)
                 return p[1]
             else:
                 raise ValueError("Chegou onde não devia em factor")

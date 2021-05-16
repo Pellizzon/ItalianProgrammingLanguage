@@ -4,7 +4,6 @@
     {
         stampa(3);
     }
-
     altro se(4 < 5)
         stampa(100);
     altro
