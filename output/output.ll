@@ -7,7 +7,7 @@ define void @"main"()
 entry:
   %".2" = bitcast [5 x i8]* @"fstr" to i8*
   %"i" = alloca i32
-  store i32 100, i32* %"i"
+  store i32 2, i32* %"i"
   %".4" = load i32, i32* %"i"
   %".5" = icmp slt i32 %".4", 10
   %".6" = icmp ne i1 %".5", 0
