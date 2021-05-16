@@ -10,9 +10,11 @@
     altro
         stampa(5);
 
-    per(i = 0; i < 3; i = i + 2)
+    per(var i = 0; i < 3; i = i + 1)
     {
         stampa(i);
         stampa(i * 2);
     }
+    var x = 5;
+    stampa(x);
 }

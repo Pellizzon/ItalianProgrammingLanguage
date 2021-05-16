@@ -13,6 +13,7 @@ from components.node import (
     While,
     If,
     For,
+    Declare,
 )
 from components.symbolTable import SymbolTable
 
@@ -51,6 +52,7 @@ ALPHABET = [
     # Number
     "INTEGER",
     # Identifier
+    "VAR",
     "IDENTIFIER",
     # Parenthesis
     "OPEN_PAR",
@@ -116,8 +118,11 @@ class Parser:
         def forstmt(p):
             return For(None, [p[2], p[4], p[6], p[8]])
 
+        @self.pg.production("assignment : VAR IDENTIFIER ASSIGN orexpr")
         @self.pg.production("assignment : IDENTIFIER ASSIGN orexpr")
         def assignment(p):
+            if len(p) == 4:
+                return Declare(p[1].value, [p[3]])
             return Assign(p[0].value, [p[2]])
 
         @self.pg.production("print : PRINT OPEN_PAR orexpr CLOSE_PAR")

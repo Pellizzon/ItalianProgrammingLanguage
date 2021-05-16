@@ -92,6 +92,11 @@ class NoOp(Node):
         return super().Evaluate()
 
 
+class Declare(Node):
+    def Evaluate(self):
+        symbolTable.declare(self.value, self.children[0].Evaluate())
+
+
 # Assigns an identifier (received by self.value/initValue)
 # to it's actual value (self.children[0].Evaluate());
 # Sets an Identfier's value on the Symbol Table
