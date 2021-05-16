@@ -1,0 +1,28 @@
+{
+    stampa(100 / 10 * 2);   /*20*/
+    stampa(1 + 22 * 2 / 2); /*20*/
+    stampa(1 + 22 / 2 * 2); /*20*/
+    stampa(---3);           /*-3*/
+    stampa(+-++-3);         /*3*/
+    stampa(123123);         /*123123*/
+    stampa(-2);             /*-2*/
+    stampa(non 1);          /*0*/
+    stampa(non 3);          /*0*/
+    stampa(non 0);          /*1*/
+    stampa(3 < 2);          /*0*/
+    stampa(3 <= 2);         /*0*/
+    stampa(3 <= 3);         /*1*/
+    stampa(2 < 3);          /*1*/
+    stampa(non 0 > non 1);  /*1*/
+    stampa(non 0 >= 1);     /*1*/
+    stampa(0 e 1);          /*0*/
+    stampa(1 e 0);          /*0*/
+    stampa(0 e 0);          /*0*/
+    stampa(1 e 1);          /*1*/
+    stampa(2 e 3);          /*2*/
+    stampa(0 o 0);          /*0*/
+    stampa(0 o 1);          /*0*/
+    stampa(1 o 0);          /*0*/
+    stampa(1 o 1);          /*1*/
+    stampa(2 o 3);          /*3*/
+}
