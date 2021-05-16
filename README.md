@@ -1,5 +1,13 @@
 # JavaScript in Italiano (con alcuni adattamenti) EBNF
 
+llvmlite:
+
+```conda install --channel=numba llvmlite```
+
+o
+
+```pip install numba```
+
 EBNF
 ```
 BLOCK = { "{", COMMAND, "}" } ;
