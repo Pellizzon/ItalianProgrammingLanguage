@@ -1,21 +1,11 @@
 # JavaScript in Italiano (con alcuni adattamenti) EBNF
 
-### llvmlite:
-
-```conda install --channel=numba llvmlite```
-
-o
-
-```pip install numba```
-
-### Running a program:
-```./run.sh <file>```
-
 EBNF
 ```
 WRAPPER = { "{" block "}" }
 BLOCK = command | block command ;
-COMMAND = ( λ | ASSIGNMENT | PRINT | FUNCTIONCALL | RETURN), ";" | BLOCK | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT;
+COMMAND = ( λ | ASSIGNMENT | PRINT | FUNCTIONCALL | RETURN), ";" ;
+COMMAND =  BLOCK | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT;
 
 FUNCTIONDEF = "funzione", IDENTIFIER, "(", ARGUMENTS, ")", BLOCK ;
 ARGUMENTS = [IDENTIFIER], {",", ARGUMENTS} ;
@@ -45,7 +35,14 @@ LETTER = ( a | ... | z | A | ... | Z ) ;
 DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
 ```
 
-Referenze:
+### llvmlite:
+
+```conda install --channel=numba llvmlite``` o ```pip install numba```
+
+### Running a program:
+```./run.sh <file>```
+
+References:
 
 - https://joshsharp.com.au/blog/rpython-rply-interpreter-1.html
 
