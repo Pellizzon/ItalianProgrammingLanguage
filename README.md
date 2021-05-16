@@ -1,6 +1,6 @@
 # JavaScript in Italiano (con alcuni adattamenti) EBNF
 
-EBNF
+## EBNF
 ```
 WRAPPER = { "{" block "}" }
 BLOCK = command | block command ;
@@ -35,11 +35,17 @@ LETTER = ( a | ... | z | A | ... | Z ) ;
 DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
 ```
 
+## Requirements
+
 ### llvmlite:
 
-```conda install --channel=numba llvmlite``` o ```pip install numba```
+```conda install --channel=numba llvmlite``` or ```pip install numba```
 
-### Running a program:
+### rply
+
+```conda install -c conda-forge rply``` or ```pip install rply```
+
+## Running a program:
 ```./run.sh <file>```
 
 References:
