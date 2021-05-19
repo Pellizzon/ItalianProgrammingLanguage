@@ -9,7 +9,7 @@ class CodeGen:
         self.binding.initialize_native_asmprinter()
         self._config_llvm()
         self._create_execution_engine()
-        self._declare_print_function()
+        self._declare_print_scanf_function()
 
     def _config_llvm(self):
         # Config LLVM
@@ -33,22 +33,41 @@ class CodeGen:
         engine = binding.create_mcjit_compiler(backing_mod, target_machine)
         self.engine = engine
 
-    def _declare_print_function(self):
+    def _declare_print_scanf_function(self):
+
         # Declare Printf function
         voidptr_ty = ir.IntType(8).as_pointer()
         printf_ty = ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True)
         printf = ir.Function(self.module, printf_ty, name="printf")
         # Declare argument list
-        fmt = "%d \n\0"
-        c_fmt = ir.Constant(
-            ir.ArrayType(ir.IntType(8), len(fmt)), bytearray(fmt.encode("utf8"))
+        printf_fmt = "%d\n\0"
+        c_printf_fmt = ir.Constant(
+            ir.ArrayType(ir.IntType(8), len(printf_fmt)),
+            bytearray(printf_fmt.encode("utf8")),
         )
-        global_fmt = ir.GlobalVariable(self.module, c_fmt.type, name="fstr")
-        global_fmt.linkage = "internal"
-        global_fmt.global_constant = True
-        global_fmt.initializer = c_fmt
-        fmt_arg = self.builder.bitcast(global_fmt, voidptr_ty)
-        self.printf = (printf, fmt_arg)
+        printf_global_fmt = ir.GlobalVariable(
+            self.module, c_printf_fmt.type, name="fstr"
+        )
+        printf_global_fmt.linkage = "internal"
+        printf_global_fmt.global_constant = True
+        printf_global_fmt.initializer = c_printf_fmt
+        printf_fmt_arg = self.builder.bitcast(printf_global_fmt, voidptr_ty)
+        self.printf = (printf, printf_fmt_arg)
+
+        scanf_ty = ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True)
+        scanf = ir.Function(self.module, scanf_ty, name="scanf")
+        scanf_fmt = "%d\00"
+        c_scanf_fmt = ir.Constant(
+            ir.ArrayType(ir.IntType(8), len(scanf_fmt)),
+            bytearray(scanf_fmt.encode("utf8")),
+        )
+        global_scanf_fmt = ir.GlobalVariable(self.module, c_scanf_fmt.type, name="tmp")
+        global_scanf_fmt.linkage = "internal"
+        global_scanf_fmt.global_constant = True
+        global_scanf_fmt.initializer = c_scanf_fmt
+        scanf_fmt_arg = self.builder.bitcast(global_scanf_fmt, voidptr_ty)
+
+        self.scanf = (scanf, scanf_fmt_arg)
 
     def _compile_ir(self):
         """

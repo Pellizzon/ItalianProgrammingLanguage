@@ -5,12 +5,15 @@ symbolTable = SymbolTable()
 
 
 class Node:
-    def __init__(self, module, builder, initValue, initChildren=[], printf=None):
+    def __init__(
+        self, module, builder, initValue, initChildren=[], printf=None, scanf=None
+    ):
         self.module = module
         self.builder = builder
         self.value = initValue
         self.children = initChildren
         self.printf = printf
+        self.scanf = scanf
 
     def Evaluate(self):
         return
@@ -214,7 +217,10 @@ class Print(Node):
 # Value and Children are not needed
 class Read(Node):
     def Evaluate(self):
-        return ir.Constant(ir.IntType(32), int(input()))
+        scanf, fmt_arg = self.scanf
+        varAddress = self.builder.alloca(ir.IntType(32), name="temp")
+        self.builder.call(scanf, [fmt_arg, varAddress])
+        return self.builder.load(varAddress)
 
 
 # A Block can have many instructions. Each line of code

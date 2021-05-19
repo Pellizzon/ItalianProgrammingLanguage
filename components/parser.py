@@ -66,11 +66,12 @@ ALPHABET = [
 
 
 class Parser:
-    def __init__(self, module, builder, printf):
+    def __init__(self, module, builder, printf, scanf):
         self.pg = ParserGenerator(ALPHABET)
         self.module = module
         self.builder = builder
         self.printf = printf
+        self.scanf = scanf
 
     def parse(self):
         #                                 p[0]    p[1]     p[2]
@@ -215,10 +216,10 @@ class Parser:
 
             elif len(p) == 3:
                 if p[0].gettokentype() == "READ":
-                    return Read(self.module, self.builder, None)
+                    return Read(self.module, self.builder, None, [], None, self.scanf)
                 return p[1]
             else:
-                raise ValueError("Chegou onde não devia em factor")
+                raise ValueError("Should never reach this, on Factor")
 
         @self.pg.error
         def error_handle(token):

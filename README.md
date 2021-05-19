@@ -61,3 +61,7 @@ References:
 - https://gist.github.com/sklam/eb89eab5b5708f03d0b971136a9806f4
 
 - https://github.com/symhom/Kaleidoscope_Compiler/blob/master/short_llvmlite_examples/while_loop_example.py
+
+- https://github.com/rogerioag/llvm-gencode-samples
+
+- https://laratelli.com/posts/2020/06/generating-calls-to-scanf-from-llvm-ir/

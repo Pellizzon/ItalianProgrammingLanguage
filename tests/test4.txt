@@ -1,0 +1,6 @@
+{
+    stampa(-3);
+    stampa(leggere() * 1000);
+    stampa(leggere());
+
+}

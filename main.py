@@ -21,8 +21,9 @@ if __name__ == "__main__":
     module = codegen.module
     builder = codegen.builder
     printf = codegen.printf
+    scanf = codegen.scanf
 
-    pg = Parser(module, builder, printf)
+    pg = Parser(module, builder, printf, scanf)
     pg.parse()
     parser = pg.get_parser()
     parser.parse(tokens).Evaluate()
