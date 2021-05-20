@@ -13,7 +13,7 @@ class CodeGen:
 
     def _config_llvm(self):
         # Config LLVM
-        self.module = ir.Module(name=__file__)
+        self.module = ir.Module(name="LLVLITE_OUTPUT")
         self.module.triple = self.binding.get_default_triple()
         func_type = ir.FunctionType(ir.VoidType(), [], False)
         base_func = ir.Function(self.module, func_type, name="main")
