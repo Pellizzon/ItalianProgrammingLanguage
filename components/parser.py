@@ -14,11 +14,19 @@ from components.node import (
     If,
     For,
     Declare,
+    BitOp,
+    Pow,
 )
 from components.symbolTable import SymbolTable
 
 
 ALPHABET = [
+    # POW
+    "POW",
+    # Bitwise Operators
+    "XOR",
+    "BITWISE_OR",
+    "BITWISE_AND",
     # Logical Operators
     "AND",
     "OR",
@@ -44,6 +52,7 @@ ALPHABET = [
     "MINUS",
     "MULT",
     "DIV",
+    "DIV_REST",
     "NOT",
     # Print
     "PRINT",
@@ -66,12 +75,11 @@ ALPHABET = [
 
 
 class Parser:
-    def __init__(self, module, builder, printf, scanf):
+    def __init__(self, module, builder, builtInFunctions):
         self.pg = ParserGenerator(ALPHABET)
         self.module = module
         self.builder = builder
-        self.printf = printf
-        self.scanf = scanf
+        self.builtInFunctions = builtInFunctions
 
     def parse(self):
         #                                 p[0]    p[1]     p[2]
@@ -84,7 +92,7 @@ class Parser:
         def block(p):
             # initial block declaration
             if len(p) == 1:
-                return Block(self.module, self.builder, None, [p[0]])
+                return Block(initChildren=[p[0]])
             # adds other commands to block
             p[0].children += [p[1]]
             return p[0]
@@ -99,7 +107,7 @@ class Parser:
         def command(p):
             # case SEMICOLON
             if isinstance(p[0], Token):
-                return NoOp(None, None, None)
+                return NoOp()
             return p[0]
 
         @self.pg.production("ifstmt : IF OPEN_PAR orexpr CLOSE_PAR command")
@@ -109,54 +117,47 @@ class Parser:
         def ifstmt(p):
             if len(p) == 5:
                 return If(
-                    self.module,
-                    self.builder,
-                    None,
-                    [p[2], p[4], NoOp(None, None, None)],
+                    initChildren=[p[2], p[4], NoOp()],
                 )
             elif len(p) == 7:
-                return If(self.module, self.builder, None, [p[2], p[4], p[6]])
+                return If(initChildren=[p[2], p[4], p[6]])
             else:
                 raise ValueError("Should not reach this (ifstmt)")
 
         @self.pg.production("whilestmt : WHILE OPEN_PAR orexpr CLOSE_PAR command")
         def whilestmt(p):
-            return While(self.module, self.builder, None, [p[2], p[4]])
+            return While(initChildren=[p[2], p[4]])
 
         @self.pg.production(
             "forstmt : FOR OPEN_PAR assignment SEMICOLON orexpr SEMICOLON assignment CLOSE_PAR command"
         )
         def forstmt(p):
-            return For(self.module, self.builder, None, [p[2], p[4], p[6], p[8]])
+            return For(initChildren=[p[2], p[4], p[6], p[8]])
 
         @self.pg.production("assignment : VAR IDENTIFIER ASSIGN orexpr")
         @self.pg.production("assignment : IDENTIFIER ASSIGN orexpr")
         def assignment(p):
             if len(p) == 4:
-                return Declare(self.module, self.builder, p[1].value, [p[3]])
-            return Assign(self.module, self.builder, p[0].value, [p[2]])
+                return Declare(p[1].value, [p[3]])
+            return Assign(p[0].value, [p[2]])
 
         @self.pg.production("print : PRINT OPEN_PAR orexpr CLOSE_PAR")
         def print_prod(p):
-            return Print(self.module, self.builder, None, [p[2]], self.printf)
+            return Print(initChildren=[p[2]])
 
         @self.pg.production("orexpr : andexpr")
         @self.pg.production("orexpr : orexpr OR andexpr")
         def orexrp(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(
-                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
-            )
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("andexpr : eqexpr")
         @self.pg.production("andexpr : andexpr AND eqexpr")
         def andexpr(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(
-                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
-            )
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("eqexpr : relexpr")
         @self.pg.production("eqexpr : eqexpr EQUAL relexpr")
@@ -164,21 +165,26 @@ class Parser:
         def eqexpr(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(
-                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
-            )
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("relexpr : expression")
-        @self.pg.production("relexpr : relexpr BIGGER expression")
-        @self.pg.production("relexpr : relexpr BIGGER_EQ expression")
-        @self.pg.production("relexpr : relexpr SMALLER expression")
-        @self.pg.production("relexpr : relexpr SMALLER_EQ expression")
+        @self.pg.production("relexpr : relexpr BIGGER bitexpr")
+        @self.pg.production("relexpr : relexpr BIGGER_EQ bitexpr")
+        @self.pg.production("relexpr : relexpr SMALLER bitexpr")
+        @self.pg.production("relexpr : relexpr SMALLER_EQ bitexpr")
+        @self.pg.production("relexpr : bitexpr")
         def relexpr(p):
             if len(p) == 1:
                 return p[0]
-            return LogicalOp(
-                self.module, self.builder, p[1].gettokentype(), [p[0], p[2]]
-            )
+            return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("bitexpr : bitexpr XOR expression")
+        @self.pg.production("bitexpr : bitexpr BITWISE_OR expression")
+        @self.pg.production("bitexpr : bitexpr BITWISE_AND expression")
+        @self.pg.production("bitexpr : expression")
+        def bitexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return BitOp(p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("expression : expression PLUS term ")
         @self.pg.production("expression : expression MINUS term")
@@ -187,15 +193,23 @@ class Parser:
             if len(p) == 1:
                 return p[0]
 
-            return BinOp(self.module, self.builder, p[1].gettokentype(), [p[0], p[2]])
+            return BinOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("term : term MULT factor")
-        @self.pg.production("term : term DIV factor")
-        @self.pg.production("term : factor ")
+        @self.pg.production("term : term MULT power")
+        @self.pg.production("term : term DIV power")
+        @self.pg.production("term : term DIV_REST power")
+        @self.pg.production("term : power ")
         def term(p):
             if len(p) == 1:
                 return p[0]
-            return BinOp(self.module, self.builder, p[1].gettokentype(), [p[0], p[2]])
+            return BinOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("power : power POW factor")
+        @self.pg.production("power : factor")
+        def power(p):
+            if len(p) == 1:
+                return p[0]
+            return Pow(p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("factor : INTEGER")
         @self.pg.production("factor : IDENTIFIER")
@@ -207,16 +221,16 @@ class Parser:
         def factor(p):
             if len(p) == 1:
                 if p[0].gettokentype() == "INTEGER":
-                    return IntVal(self.module, self.builder, int(p[0].value))
+                    return IntVal(int(p[0].value))
                 elif p[0].gettokentype() == "IDENTIFIER":
-                    return Identifier(self.module, self.builder, p[0].value)
+                    return Identifier(p[0].value)
 
             if len(p) == 2:
-                return UnOp(self.module, self.builder, p[0].gettokentype(), [p[1]])
+                return UnOp(p[0].gettokentype(), [p[1]])
 
             elif len(p) == 3:
                 if p[0].gettokentype() == "READ":
-                    return Read(self.module, self.builder, None, [], None, self.scanf)
+                    return Read()
                 return p[1]
             else:
                 raise ValueError("Should never reach this, on Factor")

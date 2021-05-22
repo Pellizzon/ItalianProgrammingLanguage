@@ -1,39 +1,37 @@
 from components.symbolTable import SymbolTable
 from llvmlite import ir
 
-symbolTable = SymbolTable()
-
 
 class Node:
-    def __init__(
-        self, module, builder, initValue, initChildren=[], printf=None, scanf=None
-    ):
-        self.module = module
-        self.builder = builder
+    def __init__(self, initValue=None, initChildren=[]):
         self.value = initValue
         self.children = initChildren
-        self.printf = printf
-        self.scanf = scanf
 
-    def Evaluate(self):
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
         return
 
 
 # Deals with binary operations,
 # must have two children
 class BinOp(Node):
-    def Evaluate(self):
-        firstChildEval = self.children[0].Evaluate()
-        secondChildEval = self.children[1].Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        firstChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        secondChildEval = self.children[1].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
 
         if self.value == "PLUS":
-            evaluate = self.builder.add(firstChildEval, secondChildEval)
+            evaluate = builder.add(firstChildEval, secondChildEval)
         elif self.value == "MINUS":
-            evaluate = self.builder.sub(firstChildEval, secondChildEval)
+            evaluate = builder.sub(firstChildEval, secondChildEval)
         elif self.value == "DIV":
-            evaluate = self.builder.sdiv(firstChildEval, secondChildEval)
+            evaluate = builder.sdiv(firstChildEval, secondChildEval)
+        elif self.value == "DIV_REST":
+            evaluate = builder.srem(firstChildEval, secondChildEval)
         elif self.value == "MULT":
-            evaluate = self.builder.mul(firstChildEval, secondChildEval)
+            evaluate = builder.mul(firstChildEval, secondChildEval)
         else:
             raise ValueError("Could not evaluate BinOp")
 
@@ -43,26 +41,51 @@ class BinOp(Node):
 # Deals with Logical operations,
 # must have two children
 class LogicalOp(Node):
-    def Evaluate(self):
-        firstChildEval = self.children[0].Evaluate()
-        secondChildEval = self.children[1].Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        firstChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        secondChildEval = self.children[1].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
 
         if self.value == "SMALLER":
-            evaluate = self.builder.icmp_signed("<", firstChildEval, secondChildEval)
+            evaluate = builder.icmp_signed("<", firstChildEval, secondChildEval)
         elif self.value == "BIGGER":
-            evaluate = self.builder.icmp_signed(">", firstChildEval, secondChildEval)
+            evaluate = builder.icmp_signed(">", firstChildEval, secondChildEval)
         elif self.value == "SMALLER_EQ":
-            evaluate = self.builder.icmp_signed("<=", firstChildEval, secondChildEval)
+            evaluate = builder.icmp_signed("<=", firstChildEval, secondChildEval)
         elif self.value == "BIGGER_EQ":
-            evaluate = self.builder.icmp_signed(">=", firstChildEval, secondChildEval)
+            evaluate = builder.icmp_signed(">=", firstChildEval, secondChildEval)
         elif self.value == "NOT_EQUAL":
-            evaluate = self.builder.icmp_signed("!=", firstChildEval, secondChildEval)
+            evaluate = builder.icmp_signed("!=", firstChildEval, secondChildEval)
         elif self.value == "EQUAL":
-            evaluate = self.builder.icmp_signed("==", firstChildEval, secondChildEval)
+            evaluate = builder.icmp_signed("==", firstChildEval, secondChildEval)
         elif self.value == "AND":
-            evaluate = self.builder.and_(firstChildEval, secondChildEval)
+            evaluate = builder.and_(firstChildEval, secondChildEval)
         elif self.value == "OR":
-            evaluate = self.builder.or_(firstChildEval, secondChildEval)
+            evaluate = builder.or_(firstChildEval, secondChildEval)
+        else:
+            raise ValueError("Could not evaluate LogicalOp")
+
+        return evaluate
+
+
+class BitOp(Node):
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        firstChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        secondChildEval = self.children[1].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+
+        if self.value == "XOR":
+            evaluate = builder.xor(firstChildEval, secondChildEval)
+        elif self.value == "BITWISE_AND":
+            evaluate = builder.and_(firstChildEval, secondChildEval)
+        elif self.value == "BITWISE_OR":
+            evaluate = builder.or_(firstChildEval, secondChildEval)
         else:
             raise ValueError("Could not evaluate LogicalOp")
 
@@ -72,16 +95,16 @@ class LogicalOp(Node):
 # Deals with unary operations,
 # must have one child
 class UnOp(Node):
-    def Evaluate(self):
-        childEval = self.children[0].Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        childEval = self.children[0].Evaluate(symbolTable, builder, builtInFunctions)
 
         if self.value == "PLUS":
             evaluate = childEval
         elif self.value == "MINUS":
-            evaluate = self.builder.neg(childEval)
+            evaluate = builder.neg(childEval)
         elif self.value == "NOT":
             # builder.not_ returns Bitwise complement value, which is not what is expected in my language
-            # evaluate = self.builder.not_(childEval)
+            # evaluate = builder.not_(childEval)
             childEval.constant = 1 if childEval.constant == 0 else 0
             evaluate = childEval
         else:
@@ -92,135 +115,165 @@ class UnOp(Node):
 
 # Returns its own value, it's a "number" node
 class IntVal(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
         return ir.Constant(ir.IntType(32), int(self.value))
 
 
 # no operation
 class NoOp(Node):
-    def Evaluate(self):
-        return super().Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        return super().Evaluate(symbolTable, builder, builtInFunctions)
 
 
 class Declare(Node):
-    def Evaluate(self):
-        varAddress = self.builder.alloca(ir.IntType(32), name=self.value)
-        self.builder.store(self.children[0].Evaluate(), varAddress)
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        varAddress = builder.alloca(ir.IntType(32), name=self.value)
+        builder.store(
+            self.children[0].Evaluate(symbolTable, builder, builtInFunctions),
+            varAddress,
+        )
         symbolTable.declare(self.value, varAddress)
 
 
 # Assigns an identifier (received by self.value/initValue)
-# to it's actual value (self.children[0].Evaluate());
+# to it's actual value (self.children[0].Evaluate(symbolTable, builder, builtInFunctions));
 # Sets an Identfier's value on the Symbol Table
 class Assign(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
         varAddress = symbolTable.get(self.value)
-        self.builder.store(self.children[0].Evaluate(), varAddress)
+        builder.store(
+            self.children[0].Evaluate(symbolTable, builder, builtInFunctions),
+            varAddress,
+        )
 
 
 # Contary to the Assign object, Identifier used to get
 # an identifier's value from the Symbol Table
 class Identifier(Node):
-    def Evaluate(self):
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
         varAddress = symbolTable.get(self.value)
-        return self.builder.load(varAddress)
+        return builder.load(varAddress)
 
 
 class If(Node):
-    def Evaluate(self):
-        conditionalChildEval = self.children[0].Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        conditionalChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
         # if_else must receive an icmp obj.
         # cases like:
         # if (x) or if(3)
         # wont work, so we must have a workaround
-        conditionalChildEval = self.builder.icmp_signed(
+        conditionalChildEval = builder.icmp_signed(
             "!=", conditionalChildEval, ir.Constant(ir.IntType(32), 0)
         )
-        with self.builder.if_else(conditionalChildEval) as (then, orelse):
+        with builder.if_else(conditionalChildEval) as (then, orelse):
             with then:
                 # block or command child 1
-                self.children[1].Evaluate()
+                self.children[1].Evaluate(symbolTable, builder, builtInFunctions)
             with orelse:
                 # block or command child 2
-                self.children[2].Evaluate()
+                self.children[2].Evaluate(symbolTable, builder, builtInFunctions)
 
 
 class While(Node):
-    def Evaluate(self):
-        w_body_block = self.builder.append_basic_block("w_body")
-        w_after_block = self.builder.append_basic_block("w_after")
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        w_body_block = builder.append_basic_block("w_body")
+        w_after_block = builder.append_basic_block("w_after")
 
-        conditionalChildEval = self.children[0].Evaluate()
-        conditionalChildEval = self.builder.icmp_signed(
+        conditionalChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        conditionalChildEval = builder.icmp_signed(
             "!=", conditionalChildEval, ir.Constant(ir.IntType(32), 0)
         )
 
-        self.builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
+        builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
 
         # body
-        self.builder.position_at_start(w_body_block)
+        builder.position_at_start(w_body_block)
 
-        self.children[1].Evaluate()
+        self.children[1].Evaluate(symbolTable, builder, builtInFunctions)
 
-        conditionalChildEval = self.children[0].Evaluate()
-        conditionalChildEval = self.builder.icmp_signed(
+        conditionalChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        conditionalChildEval = builder.icmp_signed(
             "!=", conditionalChildEval, ir.Constant(ir.IntType(32), 0)
         )
-        self.builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
+        builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
         # after
-        self.builder.position_at_start(w_after_block)
+        builder.position_at_start(w_after_block)
 
 
 class For(Node):
-    def Evaluate(self):
-        self.children[0].Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        self.children[0].Evaluate(symbolTable, builder, builtInFunctions)
 
-        w_body_block = self.builder.append_basic_block("w_body")
-        w_after_block = self.builder.append_basic_block("w_after")
+        w_body_block = builder.append_basic_block("w_body")
+        w_after_block = builder.append_basic_block("w_after")
 
-        conditionalChildEval = self.children[1].Evaluate()
-        conditionalChildEval = self.builder.icmp_signed(
+        conditionalChildEval = self.children[1].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        conditionalChildEval = builder.icmp_signed(
             "!=", conditionalChildEval, ir.Constant(ir.IntType(32), 0)
         )
 
-        self.builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
+        builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
 
         # body
-        self.builder.position_at_start(w_body_block)
+        builder.position_at_start(w_body_block)
 
         # code to execute
-        self.children[3].Evaluate()
+        self.children[3].Evaluate(symbolTable, builder, builtInFunctions)
         # increment of the declared variable
-        self.children[2].Evaluate()
+        self.children[2].Evaluate(symbolTable, builder, builtInFunctions)
 
-        conditionalChildEval = self.children[1].Evaluate()
-        conditionalChildEval = self.builder.icmp_signed(
+        conditionalChildEval = self.children[1].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        conditionalChildEval = builder.icmp_signed(
             "!=", conditionalChildEval, ir.Constant(ir.IntType(32), 0)
         )
-        self.builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
-        self.builder.position_at_start(w_after_block)
+        builder.cbranch(conditionalChildEval, w_body_block, w_after_block)
+        builder.position_at_start(w_after_block)
+
+
+class Pow(Node):
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        firstChildEval = self.children[0].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        secondChildEval = self.children[1].Evaluate(
+            symbolTable, builder, builtInFunctions
+        )
+        print(firstChildEval)
+        print(secondChildEval)
+        power = builtInFunctions["pow"]
+        return builder.call(power, [firstChildEval, secondChildEval])
 
 
 # prints a value
 # composed by identifiers and/or expressions
 class Print(Node):
-    def Evaluate(self):
-        value = self.children[0].Evaluate()
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        value = self.children[0].Evaluate(symbolTable, builder, builtInFunctions)
 
-        printf, fmt_arg = self.printf
+        printf, fmt_arg = builtInFunctions["printf"]
 
         # Call Print Function
-        self.builder.call(printf, [fmt_arg, value])
+        builder.call(printf, [fmt_arg, value])
 
 
 # receives an user input
 # Value and Children are not needed
 class Read(Node):
-    def Evaluate(self):
-        scanf, fmt_arg = self.scanf
-        varAddress = self.builder.alloca(ir.IntType(32), name="temp")
-        self.builder.call(scanf, [fmt_arg, varAddress])
-        return self.builder.load(varAddress)
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        scanf, fmt_arg = builtInFunctions["scanf"]
+        varAddress = builder.alloca(ir.IntType(32), name="temp")
+        builder.call(scanf, [fmt_arg, varAddress])
+        return builder.load(varAddress)
 
 
 # A Block can have many instructions. Each line of code
@@ -229,5 +282,5 @@ class Read(Node):
 # being used to build the symbol table and eventualy
 # Print a result
 class Block(Node):
-    def Evaluate(self):
-        [i.Evaluate() for i in self.children]
+    def Evaluate(self, symbolTable, builder, builtInFunctions):
+        [i.Evaluate(symbolTable, builder, builtInFunctions) for i in self.children]

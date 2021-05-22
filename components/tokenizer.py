@@ -7,6 +7,12 @@ class Lexer:
 
     def _add_tokens(self):
         checkReservedWordEnd = r"(?!\w)"
+        # POW
+        self.lexer.add("POW", r"\*\*")
+        # Bitwise Operators
+        self.lexer.add("XOR", r"\^")
+        self.lexer.add("BITWISE_AND", r"\&")
+        self.lexer.add("BITWISE_OR", r"\|")
         # Logical Operators
         self.lexer.add("AND", r"e" + checkReservedWordEnd)
         self.lexer.add("OR", r"o" + checkReservedWordEnd)
@@ -32,6 +38,7 @@ class Lexer:
         self.lexer.add("MINUS", r"\-")
         self.lexer.add("MULT", r"\*")
         self.lexer.add("DIV", r"\/")
+        self.lexer.add("DIV_REST", r"\%")
         self.lexer.add("NOT", r"non" + checkReservedWordEnd)
         # Print
         self.lexer.add("PRINT", r"stampa" + checkReservedWordEnd)

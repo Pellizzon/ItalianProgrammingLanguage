@@ -2,8 +2,8 @@
 
 ## EBNF
 ```
-WRAPPER = { "{" block "}" }
-BLOCK = command | block command ;
+WRAPPER = "{" BLOCK "}"
+BLOCK = COMMAND | BLOCK COMMAND ;
 COMMAND = ( λ | ASSIGNMENT | PRINT | FUNCTIONCALL | RETURN), ";" ;
 COMMAND =  BLOCK | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT;
 
@@ -16,19 +16,21 @@ FORSTMT = "per", "(", ASSIGNMENT, ";", OREXPR, ";", ASSIGNMENT, ")", COMMAND ;
 
 ASSIGNMENT = ["var"], IDENTIFIER, "=", OREXPR ;
 PRINT = "stampa", "(", OREXPR, ")" ;
-READ = "leggere", "(", ")";
 
 IFSTMT = "se", "(", OREXPR, ")", COMMAND ["altro", COMMAND] ;
 WHILESTMT = "mentre", "(", OREXPR, ")", COMMAND ;
 
-OREXPR = ANDEXPR { "o", ANDEXPR } ;
-ANDEXPR = EQEXPR { "e", EQEXPR } ;
-EQEXPR = RELEXPR { ("==" | "!="), EQEXPR } ;
-RELEXPR = EXPRESSION { (">" | "<" | "<=" | ">="), EXPRESSION } ;
+OREXPR = OREXPR { "o", ANDEXPR } ;
+ANDEXPR = ANDEXPR { "e", EQEXPR } ;
+EQEXPR = EQEXPR { ("==" | "!="), EQEXPR } ;
+RELEXPR = RELEXPR { (">" | "<" | "<=" | ">="), BITEXPR } ;
 
-EXPRESSION = TERM, { ("+" | "-"), TERM } ;
-TERM = FACTOR, { ("*" | "/"), FACTOR } ;
+BITEXPR = BITEXPR { ("|" | "&" | "^"), EXPRESSION } 
+
+EXPRESSION = EXPRESSION, { ("+" | "-"), TERM } ;
+TERM = TERM, { ("*" | "/"), FACTOR } ;
 FACTOR = (("+" | "-"| "non"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READ;
+READ = "leggere", "(", ")";
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
 NUMBER = DIGIT, { DIGIT } ;
 LETTER = ( a | ... | z | A | ... | Z ) ;
@@ -50,18 +52,16 @@ DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
 
 References:
 
-- https://joshsharp.com.au/blog/rpython-rply-interpreter-1.html
+- BASE/INSPIRATION: https://blog.usejournal.com/writing-your-own-programming-language-and-compiler-with-python-a468970ae6df
 
-- https://stackoverflow.com/questions/60016733/how-to-parse-multiple-line-code-using-rply-library
+- RPLY MULTIPLE LINE LOGIC: https://stackoverflow.com/questions/60016733/how-to-parse-multiple-line-code-using-rply-library
 
-- https://blog.usejournal.com/writing-your-own-programming-language-and-compiler-with-python-a468970ae6df
+- LLVMLITE DOCS: https://llvmlite.readthedocs.io/en/latest/user-guide/ir/ir-builder.html
 
-- https://llvmlite.readthedocs.io/en/latest/user-guide/ir/ir-builder.html
+- IF_ELSE: https://gist.github.com/sklam/eb89eab5b5708f03d0b971136a9806f4
 
-- https://gist.github.com/sklam/eb89eab5b5708f03d0b971136a9806f4
+- WHILE/FOR: https://github.com/symhom/Kaleidoscope_Compiler/blob/master/short_llvmlite_examples/while_loop_example.py
 
-- https://github.com/symhom/Kaleidoscope_Compiler/blob/master/short_llvmlite_examples/while_loop_example.py
+- SCANF: https://laratelli.com/posts/2020/06/generating-calls-to-scanf-from-llvm-ir/
 
-- https://github.com/rogerioag/llvm-gencode-samples
-
-- https://laratelli.com/posts/2020/06/generating-calls-to-scanf-from-llvm-ir/
+- OPTMIZE (chapter3and4.py): https://github.com/eliben/pykaleidoscope
