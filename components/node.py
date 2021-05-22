@@ -248,8 +248,6 @@ class Pow(Node):
         secondChildEval = self.children[1].Evaluate(
             symbolTable, builder, builtInFunctions
         )
-        print(firstChildEval)
-        print(secondChildEval)
         power = builtInFunctions["pow"]
         return builder.call(power, [firstChildEval, secondChildEval])
 

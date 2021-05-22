@@ -151,7 +151,6 @@ class CodeGen:
 
     def create_ir(self, ast, symbolTable, optimize=True):
         ast.Evaluate(symbolTable, self.builder, self.builtInFunctions)
-        print(self.module)
         self._compile_ir(optimize)
 
     def save_ir(self, filename):

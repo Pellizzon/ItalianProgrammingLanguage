@@ -7,44 +7,39 @@ define void @"main"()
 entry:
   %".2" = bitcast [4 x i8]* @"fstr" to i8*
   %".3" = bitcast [3 x i8]* @"tmp" to i8*
-  %"i" = alloca i32
+  %".4" = sub i32 0, 3
+  %".5" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".4")
+  %".6" = and i32 5, 5
+  %".7" = and i32 5, 3
+  %".8" = or i32 %".6", %".7"
+  %".9" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".8")
+  %".10" = srem i32 16, 7
+  %".11" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".10")
+  %".12" = srem i32 3, 2
+  %".13" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".12")
   %"temp" = alloca i32
-  %".4" = call i32 (i8*, ...) @"scanf"(i8* %".3", i32* %"temp")
-  %".5" = load i32, i32* %"temp"
-  store i32 %".5", i32* %"i"
-  %".7" = load i32, i32* %"i"
-  %".8" = icmp slt i32 %".7", 10
-  %".9" = icmp ne i1 %".8", 0
-  br i1 %".9", label %"w_body", label %"w_after"
-w_body:
-  %".11" = load i32, i32* %"i"
-  %".12" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".11")
-  %".13" = load i32, i32* %"i"
-  %".14" = add i32 %".13", 1
-  store i32 %".14", i32* %"i"
-  %".16" = load i32, i32* %"i"
-  %".17" = icmp slt i32 %".16", 10
-  %".18" = icmp ne i1 %".17", 0
-  br i1 %".18", label %"w_body", label %"w_after"
-w_after:
-  %".20" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 1010101001)
-  %"i.1" = alloca i32
-  store i32 5, i32* %"i.1"
-  %".22" = load i32, i32* %"i.1"
-  %".23" = icmp slt i32 %".22", 10
-  %".24" = icmp ne i1 %".23", 0
-  br i1 %".24", label %"w_body.1", label %"w_after.1"
-w_body.1:
-  %".26" = load i32, i32* %"i.1"
-  %".27" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".26")
-  %".28" = load i32, i32* %"i.1"
-  %".29" = add i32 %".28", 1
-  store i32 %".29", i32* %"i.1"
-  %".31" = load i32, i32* %"i.1"
-  %".32" = icmp slt i32 %".31", 10
-  %".33" = icmp ne i1 %".32", 0
-  br i1 %".33", label %"w_body.1", label %"w_after.1"
-w_after.1:
+  %".14" = call i32 (i8*, ...) @"scanf"(i8* %".3", i32* %"temp")
+  %".15" = load i32, i32* %"temp"
+  %".16" = mul i32 %".15", 1000
+  %".17" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".16")
+  %"temp.1" = alloca i32
+  %".18" = call i32 (i8*, ...) @"scanf"(i8* %".3", i32* %"temp.1")
+  %".19" = load i32, i32* %"temp.1"
+  %".20" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".19")
+  %".21" = and i32 5, 3
+  %".22" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".21")
+  %".23" = and i32 5, 3
+  %".24" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".23")
+  %".25" = call i32 @"power"(i32 4, i32 10)
+  %".26" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".25")
+  %".27" = add i32 1, 2
+  %".28" = call i32 @"power"(i32 3, i32 %".27")
+  %".29" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".28")
+  %".30" = add i32 1, 3
+  %".31" = mul i32 1, 2
+  %".32" = add i32 1, %".31"
+  %".33" = call i32 @"power"(i32 %".30", i32 %".32")
+  %".34" = call i32 (i8*, ...) @"printf"(i8* %".2", i32 %".33")
   ret void
 }
 
