@@ -14,6 +14,7 @@ if __name__ == "__main__":
         inputData = f.read()
 
     code = PreProcessor(inputData).filter()
+    print(code)
     PreProcessor(code).check_PAR_balance()
 
     symbolTable = SymbolTable()

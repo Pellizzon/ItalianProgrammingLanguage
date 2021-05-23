@@ -16,11 +16,11 @@
     {
         stampa(3);
     }
-    mentre(x < 6)
-    {
-        x = x + 1;
-        stampa(x);
-    }
+    // mentre(x < 6)
+    //{
+    //    x = x + 1;
+    //    stampa(x);
+    //}
     mentre(x)
     {
         x = x - 1;

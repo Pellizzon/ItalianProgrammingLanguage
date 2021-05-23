@@ -6,6 +6,7 @@ class PreProcessor:
         self.code = initCode
 
     def filter(self):
+        self.code = re.sub("\/\/.*\n", "\n", self.code)
         return re.sub(r"/\*.*?\*/", "", self.code)
 
     def check_PAR_balance(self):
