@@ -1,5 +1,5 @@
 ; ModuleID = "LLVLITE_OUTPUT"
-target triple = "x86_64-pc-windows-msvc"
+target triple = "x86_64-unknown-linux-gnu"
 target datalayout = ""
 
 define void @"main"() 
