@@ -20,15 +20,18 @@ PRINT = "stampa", "(", OREXPR, ")" ;
 IFSTMT = "se", "(", OREXPR, ")", COMMAND ["altro", COMMAND] ;
 WHILESTMT = "mentre", "(", OREXPR, ")", COMMAND ;
 
-OREXPR = OREXPR { "o", ANDEXPR } ;
-ANDEXPR = ANDEXPR { "e", EQEXPR } ;
-EQEXPR = EQEXPR { ("==" | "!="), EQEXPR } ;
-RELEXPR = RELEXPR { (">" | "<" | "<=" | ">="), BITEXPR } ;
+OREXPR = ANDEXPR { "o", OREXPR } ;
+ANDEXPR = EQEXPR { "e", ANDEXPR } ;
+EQEXPR = RELEXPR { ("==" | "!="), EQEXPR } ;
+RELEXPR = BITEXPR { (">" | "<" | "<=" | ">="), RELEXPR } ;
 
-BITEXPR = BITEXPR { ("|" | "&" | "^"), EXPRESSION } 
+BITEXPR = EXPRESSION { ("|" | "&" | "^"), BITEXPR } 
 
-EXPRESSION = EXPRESSION, { ("+" | "-"), TERM } ;
-TERM = TERM, { ("*" | "/"), FACTOR } ;
+EXPRESSION = TERM, { ("+" | "-"), EXPRESSION } ;
+TERM = POWER, { ("*" | "/"), TERM } ;
+
+POWER = FACTOR { "**", POWER }
+
 FACTOR = (("+" | "-"| "non"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READ;
 READ = "leggere", "(", ")";
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
