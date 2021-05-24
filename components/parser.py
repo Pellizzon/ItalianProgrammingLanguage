@@ -27,6 +27,8 @@ ALPHABET = [
     "XOR",
     "BITWISE_OR",
     "BITWISE_AND",
+    "LSHIFT",
+    "RSHIFT",
     # Logical Operators
     "AND",
     "OR",
@@ -152,12 +154,33 @@ class Parser:
                 return p[0]
             return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("andexpr : eqexpr")
-        @self.pg.production("andexpr : andexpr AND eqexpr")
+        @self.pg.production("andexpr : bitorexpr")
+        @self.pg.production("andexpr : andexpr AND bitorexpr")
         def andexpr(p):
             if len(p) == 1:
                 return p[0]
             return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("bitorexpr : bitXorexpr")
+        @self.pg.production("bitorexpr : bitorexpr BITWISE_OR bitXorexpr")
+        def bitorexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return BitOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("bitXorexpr : bitandexpr")
+        @self.pg.production("bitXorexpr : bitXorexpr XOR bitandexpr")
+        def bitXorexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return BitOp(p[1].gettokentype(), [p[0], p[2]])
+
+        @self.pg.production("bitandexpr : eqexpr")
+        @self.pg.production("bitandexpr : bitandexpr BITWISE_AND eqexpr")
+        def bitandexpr(p):
+            if len(p) == 1:
+                return p[0]
+            return BitOp(p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("eqexpr : relexpr")
         @self.pg.production("eqexpr : eqexpr EQUAL relexpr")
@@ -167,23 +190,23 @@ class Parser:
                 return p[0]
             return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("relexpr : relexpr BIGGER bitexpr")
-        @self.pg.production("relexpr : relexpr BIGGER_EQ bitexpr")
-        @self.pg.production("relexpr : relexpr SMALLER bitexpr")
-        @self.pg.production("relexpr : relexpr SMALLER_EQ bitexpr")
-        @self.pg.production("relexpr : bitexpr")
+        @self.pg.production("relexpr : relexpr BIGGER shiftexpr")
+        @self.pg.production("relexpr : relexpr BIGGER_EQ shiftexpr")
+        @self.pg.production("relexpr : relexpr SMALLER shiftexpr")
+        @self.pg.production("relexpr : relexpr SMALLER_EQ shiftexpr")
+        @self.pg.production("relexpr : shiftexpr")
         def relexpr(p):
             if len(p) == 1:
                 return p[0]
             return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("bitexpr : bitexpr XOR expression")
-        @self.pg.production("bitexpr : bitexpr BITWISE_OR expression")
-        @self.pg.production("bitexpr : bitexpr BITWISE_AND expression")
-        @self.pg.production("bitexpr : expression")
-        def bitexpr(p):
+        @self.pg.production("shiftexpr : shiftexpr LSHIFT expression ")
+        @self.pg.production("shiftexpr : shiftexpr RSHIFT expression")
+        @self.pg.production("shiftexpr : expression")
+        def shiftexpr(p):
             if len(p) == 1:
                 return p[0]
+
             return BitOp(p[1].gettokentype(), [p[0], p[2]])
 
         @self.pg.production("expression : expression PLUS term ")

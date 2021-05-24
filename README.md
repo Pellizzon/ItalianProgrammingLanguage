@@ -21,11 +21,16 @@ IFSTMT = "se", "(", OREXPR, ")", COMMAND ["altro", COMMAND] ;
 WHILESTMT = "mentre", "(", OREXPR, ")", COMMAND ;
 
 OREXPR = ANDEXPR { "o", OREXPR } ;
-ANDEXPR = EQEXPR { "e", ANDEXPR } ;
+ANDEXPR = BITOREXPR { "e", ANDEXPR } ;
+
+BITOREXPR = BITXOREXPR { "|", BITOREXPR } ;
+BITXOREXPR = BITANDEXPR { "^", BITXOREXPR}
+BITANDEXPR = EQEXPR { "&", BITANDEXPR}
+
 EQEXPR = RELEXPR { ("==" | "!="), EQEXPR } ;
 RELEXPR = BITEXPR { (">" | "<" | "<=" | ">="), RELEXPR } ;
 
-BITEXPR = EXPRESSION { ("|" | "&" | "^"), BITEXPR } 
+SHIFTEXPR = EXPRESSION { ("<<" | ">>"), SHIFTEXPR } ;
 
 EXPRESSION = TERM, { ("+" | "-"), EXPRESSION } ;
 TERM = POWER, { ("*" | "/"), TERM } ;
@@ -54,6 +59,8 @@ DIGIT = ( 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 0 ) ;
 ```./run.sh <file>```
 
 References:
+
+- C BNF example: https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
 
 - BASE/INSPIRATION: https://blog.usejournal.com/writing-your-own-programming-language-and-compiler-with-python-a468970ae6df
 

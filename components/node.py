@@ -62,9 +62,21 @@ class LogicalOp(Node):
         elif self.value == "EQUAL":
             evaluate = builder.icmp_signed("==", firstChildEval, secondChildEval)
         elif self.value == "AND":
-            evaluate = builder.and_(firstChildEval, secondChildEval)
+            c1 = builder.icmp_signed(
+                "!=", firstChildEval, ir.Constant(ir.IntType(32), 0)
+            )
+            c2 = builder.icmp_signed(
+                "!=", secondChildEval, ir.Constant(ir.IntType(32), 0)
+            )
+            evaluate = builder.and_(c1, c2)
         elif self.value == "OR":
-            evaluate = builder.or_(firstChildEval, secondChildEval)
+            c1 = builder.icmp_signed(
+                "!=", firstChildEval, ir.Constant(ir.IntType(32), 0)
+            )
+            c2 = builder.icmp_signed(
+                "!=", secondChildEval, ir.Constant(ir.IntType(32), 0)
+            )
+            evaluate = builder.or_(c1, c2)
         else:
             raise ValueError("Could not evaluate LogicalOp")
 
@@ -86,6 +98,10 @@ class BitOp(Node):
             evaluate = builder.and_(firstChildEval, secondChildEval)
         elif self.value == "BITWISE_OR":
             evaluate = builder.or_(firstChildEval, secondChildEval)
+        elif self.value == "LSHIFT":
+            evaluate = builder.shl(firstChildEval, secondChildEval)
+        elif self.value == "RSHIFT":
+            evaluate = builder.lshr(firstChildEval, secondChildEval)
         else:
             raise ValueError("Could not evaluate LogicalOp")
 
@@ -103,10 +119,11 @@ class UnOp(Node):
         elif self.value == "MINUS":
             evaluate = builder.neg(childEval)
         elif self.value == "NOT":
-            # builder.not_ returns Bitwise complement value, which is not what is expected in my language
-            # evaluate = builder.not_(childEval)
-            childEval.constant = 1 if childEval.constant == 0 else 0
-            evaluate = childEval
+            evaluate = builder.not_(childEval)
+            evaluate = builder.add(evaluate, ir.Constant(ir.IntType(32), 1))
+            evaluate = builder.icmp_signed(
+                "!=", evaluate, ir.Constant(ir.IntType(32), 0)
+            )
         else:
             raise ValueError("Could not evaluate UnOp")
 

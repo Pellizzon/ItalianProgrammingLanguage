@@ -13,6 +13,8 @@ class Lexer:
         self.lexer.add("XOR", r"\^")
         self.lexer.add("BITWISE_AND", r"\&")
         self.lexer.add("BITWISE_OR", r"\|")
+        self.lexer.add("LSHIFT", r"\<\<")
+        self.lexer.add("RSHIFT", r"\>\>")
         # Logical Operators
         self.lexer.add("AND", r"e" + checkReservedWordEnd)
         self.lexer.add("OR", r"o" + checkReservedWordEnd)
