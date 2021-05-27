@@ -56,7 +56,7 @@ class CodeGen:
         printf_global_fmt.initializer = c_printf_fmt
         printf_fmt_arg = self.builder.bitcast(printf_global_fmt, voidptr_ty)
 
-        self.builtInFunctions["printf"] = (printf, printf_fmt_arg)
+        self.builtInFunctions["printf"] = (printf, printf_global_fmt, voidptr_ty)
 
         scanf_ty = ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True)
         scanf = ir.Function(self.module, scanf_ty, name="scanf")
@@ -71,7 +71,7 @@ class CodeGen:
         global_scanf_fmt.initializer = c_scanf_fmt
         scanf_fmt_arg = self.builder.bitcast(global_scanf_fmt, voidptr_ty)
 
-        self.builtInFunctions["scanf"] = (scanf, scanf_fmt_arg)
+        self.builtInFunctions["scanf"] = (scanf, global_scanf_fmt, voidptr_ty)
 
     def _declare_pow_function(self):
         i32 = ir.IntType(32)
@@ -150,7 +150,7 @@ class CodeGen:
         return mod
 
     def create_ir(self, ast, symbolTable, optimize=True):
-        ast.Evaluate(symbolTable, self.builder, self.builtInFunctions)
+        ast.Evaluate(symbolTable, self.builder, self.builtInFunctions, self.module)
         self._compile_ir(optimize)
 
     def save_ir(self, filename):

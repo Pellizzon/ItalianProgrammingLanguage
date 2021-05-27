@@ -1,4 +1,4 @@
-{
+funzione main(){
     var x = 3;
     stampa(x);
     x = 3 + x;

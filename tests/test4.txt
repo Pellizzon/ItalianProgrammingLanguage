@@ -1,4 +1,4 @@
-{
+funzione main(){
     stampa(-3);
     stampa(5 e 5 o 5 e 3);
     stampa(16 % 7);

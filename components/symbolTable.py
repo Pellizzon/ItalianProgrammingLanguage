@@ -16,3 +16,11 @@ class SymbolTable:
 
     def declare(self, key, val):
         self.symbols[key] = val
+
+    def contains(self, key):
+        if key in self.symbols:
+            return True
+        return False
+
+    def dropReturn(self):
+        del self.symbols["return"]

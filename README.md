@@ -74,4 +74,6 @@ References:
 
 - SCANF: https://laratelli.com/posts/2020/06/generating-calls-to-scanf-from-llvm-ir/
 
-- OPTMIZE (chapter3and4.py): https://github.com/eliben/pykaleidoscope
+- OPTMIZE (chapter3and4.py): https://github.com/eliben/pykaleidoscope 
+
+- OPTMIZE: https://stackoverflow.com/questions/45171678/why-there-is-no-difference-when-i-change-the-level-of-optimizaition-in-llvmlite 

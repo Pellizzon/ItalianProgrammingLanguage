@@ -16,6 +16,9 @@ from components.node import (
     Declare,
     BitOp,
     Pow,
+    DeclareFunction,
+    Return,
+    FunctionCall,
 )
 from components.symbolTable import SymbolTable
 
@@ -84,9 +87,41 @@ class Parser:
         self.builtInFunctions = builtInFunctions
 
     def parse(self):
-        #                                 p[0]    p[1]     p[2]
-        @self.pg.production("wrapper : OPEN_BRACE block CLOSE_BRACE")
+        @self.pg.production("wrapper : funcdef")
         def wrapper(p):
+            return p[0]
+
+        @self.pg.production("funcdef : funcdef func")
+        @self.pg.production("funcdef : func")
+        def funcdef(p):
+            # initial functions declaration
+            if len(p) == 1:
+                return Block(initChildren=[p[0]])
+            # adds other commands to block
+            p[0].children += [p[1]]
+            return p[0]
+
+        @self.pg.production("func : DEF_FUNC IDENTIFIER OPEN_PAR CLOSE_PAR command")
+        def func(p):
+            return DeclareFunction(p[1].value, [[], p[4]])
+
+        @self.pg.production(
+            "func : DEF_FUNC IDENTIFIER OPEN_PAR args CLOSE_PAR command"
+        )
+        def func2(p):
+            return DeclareFunction(p[1].value, [p[3], p[5]])
+
+        @self.pg.production("args : IDENTIFIER")
+        @self.pg.production("args : args COMMA IDENTIFIER")
+        def wrapper(p):
+            if len(p) == 1:
+                return [p[0].value]
+            p[0] += [p[2].value]
+            return p[0]
+
+        #                                 p[0]    p[1]     p[2]
+        @self.pg.production("blockwrapper : OPEN_BRACE block CLOSE_BRACE")
+        def blockwrapper(p):
             return p[1]
 
         @self.pg.production("block : command")
@@ -101,16 +136,30 @@ class Parser:
 
         @self.pg.production("command : assignment SEMICOLON")
         @self.pg.production("command : print SEMICOLON")
+        @self.pg.production("command : return SEMICOLON")
         @self.pg.production("command : ifstmt")
         @self.pg.production("command : whilestmt")
         @self.pg.production("command : forstmt")
-        @self.pg.production("command : wrapper")
+        @self.pg.production("command : blockwrapper")
         @self.pg.production("command : SEMICOLON")
+        @self.pg.production("command : funccall")
         def command(p):
             # case SEMICOLON
             if isinstance(p[0], Token):
                 return NoOp()
             return p[0]
+
+        @self.pg.production("funccall : IDENTIFIER OPEN_PAR CLOSE_PAR")
+        def funccall_fact(p):
+            return FunctionCall(p[0].value, [])
+
+        @self.pg.production("funccall : IDENTIFIER OPEN_PAR orargs CLOSE_PAR")
+        def funccall_fact2(p):
+            return FunctionCall(p[0].value, p[2])
+
+        @self.pg.production("return : RETURN orexpr")
+        def return_(p):
+            return Return(initChildren=[p[1]])
 
         @self.pg.production("ifstmt : IF OPEN_PAR orexpr CLOSE_PAR command")
         @self.pg.production(
@@ -257,6 +306,22 @@ class Parser:
                 return p[1]
             else:
                 raise ValueError("Should never reach this, on Factor")
+
+        @self.pg.production("factor : IDENTIFIER OPEN_PAR CLOSE_PAR")
+        def funccall_fact(p):
+            return FunctionCall(p[0].value, [])
+
+        @self.pg.production("factor : IDENTIFIER OPEN_PAR orargs CLOSE_PAR")
+        def funccall_fact2(p):
+            return FunctionCall(p[0].value, p[2])
+
+        @self.pg.production("orargs : orexpr")
+        @self.pg.production("orargs : orargs COMMA orexpr")
+        def wrapper(p):
+            if len(p) == 1:
+                return [p[0]]
+            p[0] += [p[2]]
+            return p[0]
 
         @self.pg.error
         def error_handle(token):
