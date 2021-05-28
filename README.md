@@ -1,16 +1,22 @@
-# JavaScript in Italiano (con alcuni adattamenti) EBNF
+# Programming Language in Italian
 
 ## EBNF
 ```
-WRAPPER = "{" BLOCK "}"
+WRAPPER = FUNCDEF, { FUNCDEF } ;
+FUNCDEF = "funzione", IDENTIFIER, "(", ARGUMENTS, ")", BLOCKWRAPPER ;
+ARGUMENTS = IDENTIFIER { ",", IDENTIFIER } | λ;
+
+ 
+BLOCKWRAPPER = "inizio" BLOCK "fine" ;
 BLOCK = COMMAND | BLOCK COMMAND ;
 COMMAND = ( λ | ASSIGNMENT | PRINT | FUNCTIONCALL | RETURN), ";" ;
-COMMAND =  BLOCK | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT;
+COMMAND =  BLOCKWRAPPER | WHILESTMT | IFSMT | FUNCTIONDEF | FORSTMT | FUNCCALL;
 
-FUNCTIONDEF = "funzione", IDENTIFIER, "(", ARGUMENTS, ")", BLOCK ;
-ARGUMENTS = [IDENTIFIER], {",", ARGUMENTS} ;
-FUNCTIONCALL = IDENTIFIER, "(", [OREXPR], {",", OREXPR},")";
-RETURN = "ritorna", [OREXPR];  
+FUNCCALL = IDENTIFIER, "(", ORARGS, ")" ;
+
+ORARGS = IDENTIFIER { ",", OREXPR } | λ;
+
+RETURN = "ritorna", OREXPR ;  
 
 FORSTMT = "per", "(", ASSIGNMENT, ";", OREXPR, ";", ASSIGNMENT, ")", COMMAND ;
 
@@ -37,7 +43,7 @@ TERM = POWER, { ("*" | "/"), TERM } ;
 
 POWER = FACTOR { "**", POWER }
 
-FACTOR = (("+" | "-"| "non"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READ;
+FACTOR = (("+" | "-"| "non"), FACTOR) | NUMBER | "(", OREXPR, ")" | IDENTIFIER | READ | FUNCCALL ;
 READ = "leggere", "(", ")";
 IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
 NUMBER = DIGIT, { DIGIT } ;

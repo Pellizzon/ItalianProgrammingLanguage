@@ -101,12 +101,14 @@ class Parser:
             p[0].children += [p[1]]
             return p[0]
 
-        @self.pg.production("func : DEF_FUNC IDENTIFIER OPEN_PAR CLOSE_PAR command")
+        @self.pg.production(
+            "func : DEF_FUNC IDENTIFIER OPEN_PAR CLOSE_PAR blockwrapper"
+        )
         def func(p):
             return DeclareFunction(p[1].value, [[], p[4]])
 
         @self.pg.production(
-            "func : DEF_FUNC IDENTIFIER OPEN_PAR args CLOSE_PAR command"
+            "func : DEF_FUNC IDENTIFIER OPEN_PAR args CLOSE_PAR blockwrapper"
         )
         def func2(p):
             return DeclareFunction(p[1].value, [p[3], p[5]])

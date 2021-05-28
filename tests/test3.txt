@@ -1,13 +1,13 @@
-funzione aaa(){
-    per(var i = leggere(); i < 10; i = i + 1)
-    {
-        stampa(i);
-    }
-    stampa(1010101001);
-    per(var i = 5; i < 10; i = i + 1)
-        stampa(i);
-}
-
-funzione main(){
-    aaa();
+funzione main() {
+    stampa(-3);
+    stampa(5 e 5 o 5 e 3);
+    stampa(16 % 7);
+    stampa(3 % 2);
+    stampa(leggere() * 1000);
+    stampa(leggere());
+    stampa(5 e 3);
+    stampa(5 & 3);
+    stampa(4**10);
+    stampa(3**(1+2));
+    stampa((1+3)**(1+1*2));
 }

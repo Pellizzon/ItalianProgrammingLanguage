@@ -1,36 +1,45 @@
 funzione main() {
-    stampa(100 / 10 * 2);   /*20*/
-    stampa(1 + 22 * 2 / 2); /*23*/
-    stampa(1 + 22 / 2 * 2); /*23*/
-    stampa(---3);           /*-3*/
-    stampa(+-++-3);         /*3*/
-    stampa(123123);         /*123123*/
-    stampa(-2);             /*-2*/
-    stampa(non 1);          /*0*/
-    stampa(non 3);          /*0*/
-    stampa(non 0);          /*1*/
-    stampa(3 < 2);          /*0*/
-    stampa(3 <= 2);         /*0*/
-    stampa(3 <= 3);         /*1*/
-    stampa(2 < 3);          /*1*/
-    stampa(non 0 > non 1);  /*1*/
-    stampa(non 0 >= 1);     /*1*/
-    stampa(0 e 1);          /*0*/
-    stampa(1 e 0);          /*0*/
-    stampa(0 e 0);          /*0*/
-    stampa(1 e 1);          /*1*/
-    stampa(2 e 3);          /*2*/
-    stampa(0 o 0);          /*0*/
-    stampa(0 o 1);          /*0*/
-    stampa(1 o 0);          /*0*/
-    stampa(1 o 1);          /*1*/
-    stampa(2 o 3);          /*3*/
-    stampa(2 << 1 >> 3);    /*0*/
-    stampa(2 << 2 & 1);     /*0*/
-    stampa(2 << 2 & 3);     /*0*/
-    stampa(2 << 2 | 3);     /*11*/
-    ;
+    var x = 3;
+    stampa(x);
+    x = 3 + x;
+    stampa(x);
+    x = 3;
+    se(x)
+    {
+        stampa(4);
+    }
+    altro se(x <= 3)
+    {
+        stampa(9);
+    }
+    altro
+    {
+        stampa(3);
+    }
+    
+    se(x)
+        stampa(4);
+    altro se(x <= 3)
+        stampa(9);
+    altro
+        stampa(3);
 
-    ;
-    stampa(3 o 5 << 2);     /*1*/
+    // mentre(x < 6)
+    //{
+    //    x = x + 1;
+    //    stampa(x);
+    //}
+    mentre(x)
+    {
+        x = x - 1;
+        stampa(1000);
+    }
+    per(var i = 0; i < 5; i = i + 1)
+    {
+        stampa(i);
+    }
+    per(i = 5; i > 0; i = i - 1)
+    {
+        stampa(i);
+    }
 }

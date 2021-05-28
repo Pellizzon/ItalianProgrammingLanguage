@@ -1,37 +1,15 @@
-funzione main(){
-    var x = 3;
-    stampa(x);
-    x = 3 + x;
-    stampa(x);
-    x = 3;
-    se(x)
-    {
-        stampa(4);
-    }
-    altro se(x <= 3)
-    {
-        stampa(9);
-    }
-    altro
-    {
-        stampa(3);
-    }
-    // mentre(x < 6)
-    //{
-    //    x = x + 1;
-    //    stampa(x);
-    //}
-    mentre(x)
-    {
-        x = x - 1;
-        stampa(1000);
-    }
-    per(var i = 0; i < 5; i = i + 1)
+funzione aaa()
+{
+    per(var i = leggere(); i < 10; i = i + 1)
     {
         stampa(i);
     }
-    per(i = 5; i > 0; i = i - 1)
-    {
+    stampa(1010101001);
+    per(var i = 5; i < 10; i = i + 1)
         stampa(i);
-    }
+}
+
+funzione main()
+{
+    aaa();
 }

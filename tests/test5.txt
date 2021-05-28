@@ -1,12 +1,12 @@
 funzione factorial(x) 
 {
+    se (x < 0)
+        ritorna 0;
     se (x == 0)
         ritorna 1;
     altro se (x == 1)
         ritorna 1;
-    altro
-        ritorna (x * factorial(x-1)); //segmentation fault, -1 wont work
-    ritorna 0;
+    ritorna (x * factorial(x-1)); //segmentation fault, -1 wont work
 }
 
 funzione main() 

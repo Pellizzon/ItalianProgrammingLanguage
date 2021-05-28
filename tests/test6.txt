@@ -1,0 +1,23 @@
+funzione fib(n) {
+    se (n <= 1)
+        ritorna n; 
+    ritorna fib(n-1) + fib(n-2);
+}
+
+funzione teste(){
+    stampa(leggere() * 1000);
+}
+
+funzione main()
+{
+    var x = 10000;
+    teste();
+    stampa(teste()); // prints 0, functions with no return return 0
+    var x = fib(9); 
+    stampa(x);
+
+    stampa(3**3);
+    stampa(fib(3**3));
+    per (var i = 0; i < 10; i = i+ 1)
+        stampa(fib(i));
+}
