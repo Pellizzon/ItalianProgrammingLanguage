@@ -1,0 +1,10 @@
+funzione main()
+{
+    per(var i = 0; i < 10; i = i + 1)
+    {
+        se (i %  2 == 0)
+            stampa(1);
+        altro
+            stampa(0);
+    }
+}
