@@ -6,7 +6,7 @@ funzione factorial(x)
         ritorna 1;
     altro se (x == 1)
         ritorna 1;
-    ritorna (x * factorial(x-1)); //segmentation fault, -1 wont work
+    ritorna (x * factorial(x-1));
 }
 
 funzione main() 
@@ -14,3 +14,4 @@ funzione main()
     per (var i = -1; i < 10; i = i+1)
         stampa(factorial(i)); 
 }
+
