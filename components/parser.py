@@ -251,7 +251,7 @@ class Parser:
                 return p[0]
             return LogicalOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("shiftexpr : shiftexpr LSHIFT expression ")
+        @self.pg.production("shiftexpr : shiftexpr LSHIFT expression")
         @self.pg.production("shiftexpr : shiftexpr RSHIFT expression")
         @self.pg.production("shiftexpr : expression")
         def shiftexpr(p):
@@ -260,7 +260,7 @@ class Parser:
 
             return BitOp(p[1].gettokentype(), [p[0], p[2]])
 
-        @self.pg.production("expression : expression PLUS term ")
+        @self.pg.production("expression : expression PLUS term")
         @self.pg.production("expression : expression MINUS term")
         @self.pg.production("expression : term")
         def expression(p):
@@ -272,7 +272,7 @@ class Parser:
         @self.pg.production("term : term MULT power")
         @self.pg.production("term : term DIV power")
         @self.pg.production("term : term DIV_REST power")
-        @self.pg.production("term : power ")
+        @self.pg.production("term : power")
         def term(p):
             if len(p) == 1:
                 return p[0]
