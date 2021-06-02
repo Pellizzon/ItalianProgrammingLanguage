@@ -4,15 +4,9 @@ funzione fib(n) {
     ritorna fib(n-1) + fib(n-2);
 }
 
-funzione teste(){
-    stampa(leggere() * 1000);
-}
-
 funzione main()
 {
     var x = 10000;
-    teste();
-    stampa(teste()); // prints 0, functions with no return return 0
     var x = fib(9); 
     stampa(x);
 

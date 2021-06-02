@@ -7,25 +7,39 @@ define void @"main"()
 entry:
   %".2" = bitcast [4 x i8]* @"fstr" to i8*
   %".3" = bitcast [3 x i8]* @"tmp" to i8*
+  %"x" = alloca i32
+  store i32 10000, i32* %"x"
+  %"x.1" = alloca i32
+  %".5" = call i32 @"fib"(i32 9)
+  store i32 %".5", i32* %"x.1"
+  %".7" = load i32, i32* %"x.1"
+  %".8" = bitcast [4 x i8]* @"fstr" to i8*
+  %".9" = call i32 (i8*, ...) @"printf"(i8* %".8", i32 %".7")
+  %".10" = call i32 @"power"(i32 3, i32 3)
+  %".11" = bitcast [4 x i8]* @"fstr" to i8*
+  %".12" = call i32 (i8*, ...) @"printf"(i8* %".11", i32 %".10")
+  %".13" = call i32 @"power"(i32 3, i32 3)
+  %".14" = call i32 @"fib"(i32 %".13")
+  %".15" = bitcast [4 x i8]* @"fstr" to i8*
+  %".16" = call i32 (i8*, ...) @"printf"(i8* %".15", i32 %".14")
   %"i" = alloca i32
-  %".4" = sub i32 0, 1
-  store i32 %".4", i32* %"i"
-  %".6" = load i32, i32* %"i"
-  %".7" = icmp slt i32 %".6", 10
-  %".8" = icmp ne i1 %".7", 0
-  br i1 %".8", label %"w_body", label %"w_after"
+  store i32 0, i32* %"i"
+  %".18" = load i32, i32* %"i"
+  %".19" = icmp slt i32 %".18", 10
+  %".20" = icmp ne i1 %".19", 0
+  br i1 %".20", label %"w_body", label %"w_after"
 w_body:
-  %".10" = load i32, i32* %"i"
-  %".11" = call i32 @"factorial"(i32 %".10")
-  %".12" = bitcast [4 x i8]* @"fstr" to i8*
-  %".13" = call i32 (i8*, ...) @"printf"(i8* %".12", i32 %".11")
-  %".14" = load i32, i32* %"i"
-  %".15" = add i32 %".14", 1
-  store i32 %".15", i32* %"i"
-  %".17" = load i32, i32* %"i"
-  %".18" = icmp slt i32 %".17", 10
-  %".19" = icmp ne i1 %".18", 0
-  br i1 %".19", label %"w_body", label %"w_after"
+  %".22" = load i32, i32* %"i"
+  %".23" = call i32 @"fib"(i32 %".22")
+  %".24" = bitcast [4 x i8]* @"fstr" to i8*
+  %".25" = call i32 (i8*, ...) @"printf"(i8* %".24", i32 %".23")
+  %".26" = load i32, i32* %"i"
+  %".27" = add i32 %".26", 1
+  store i32 %".27", i32* %"i"
+  %".29" = load i32, i32* %"i"
+  %".30" = icmp slt i32 %".29", 10
+  %".31" = icmp ne i1 %".30", 0
+  br i1 %".31", label %"w_body", label %"w_after"
 w_after:
   ret void
 }
@@ -60,42 +74,27 @@ w_after:
   ret i32 %".19"
 }
 
-define i32 @"factorial"(i32 %".1") 
+define i32 @"fib"(i32 %".1") 
 {
 entry:
-  %"x" = alloca i32
-  store i32 %".1", i32* %"x"
-  %".4" = load i32, i32* %"x"
-  %".5" = icmp slt i32 %".4", 0
+  %"n" = alloca i32
+  store i32 %".1", i32* %"n"
+  %".4" = load i32, i32* %"n"
+  %".5" = icmp sle i32 %".4", 1
   %".6" = icmp ne i1 %".5", 0
   br i1 %".6", label %"entry.if", label %"entry.else"
 entry.if:
-  ret i32 0
+  %".8" = load i32, i32* %"n"
+  ret i32 %".8"
 entry.else:
   br label %"entry.endif"
 entry.endif:
-  %".10" = load i32, i32* %"x"
-  %".11" = icmp eq i32 %".10", 0
-  %".12" = icmp ne i1 %".11", 0
-  br i1 %".12", label %"entry.endif.if", label %"entry.endif.else"
-entry.endif.if:
-  ret i32 1
-entry.endif.else:
-  %".15" = load i32, i32* %"x"
-  %".16" = icmp eq i32 %".15", 1
-  %".17" = icmp ne i1 %".16", 0
-  br i1 %".17", label %"entry.endif.else.if", label %"entry.endif.else.else"
-entry.endif.endif:
-  %".22" = load i32, i32* %"x"
-  %".23" = load i32, i32* %"x"
-  %".24" = sub i32 %".23", 1
-  %".25" = call i32 @"factorial"(i32 %".24")
-  %".26" = mul i32 %".22", %".25"
-  ret i32 %".26"
-entry.endif.else.if:
-  ret i32 1
-entry.endif.else.else:
-  br label %"entry.endif.else.endif"
-entry.endif.else.endif:
-  br label %"entry.endif.endif"
+  %".11" = load i32, i32* %"n"
+  %".12" = sub i32 %".11", 1
+  %".13" = call i32 @"fib"(i32 %".12")
+  %".14" = load i32, i32* %"n"
+  %".15" = sub i32 %".14", 2
+  %".16" = call i32 @"fib"(i32 %".15")
+  %".17" = add i32 %".13", %".16"
+  ret i32 %".17"
 }
