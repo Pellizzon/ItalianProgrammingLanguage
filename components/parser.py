@@ -80,11 +80,8 @@ ALPHABET = [
 
 
 class Parser:
-    def __init__(self, module, builder, builtInFunctions):
+    def __init__(self):
         self.pg = ParserGenerator(ALPHABET)
-        self.module = module
-        self.builder = builder
-        self.builtInFunctions = builtInFunctions
 
     def parse(self):
         @self.pg.production("wrapper : funcdef")
@@ -117,11 +114,13 @@ class Parser:
         @self.pg.production("args : args COMMA IDENTIFIER")
         def wrapper(p):
             if len(p) == 1:
+                # init list of arguments
                 return [p[0].value]
+            # increment args' list
             p[0] += [p[2].value]
             return p[0]
 
-        #                                 p[0]    p[1]     p[2]
+        #                                     p[0]      p[1]     p[2]
         @self.pg.production("blockwrapper : OPEN_BRACE block CLOSE_BRACE")
         def blockwrapper(p):
             return p[1]

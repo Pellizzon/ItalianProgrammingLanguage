@@ -11,8 +11,7 @@ class Node:
         return
 
 
-# Deals with binary operations,
-# must have two children
+# Deals with binary operations
 class BinOp(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         firstChildEval = self.children[0].Evaluate(
@@ -38,8 +37,7 @@ class BinOp(Node):
         return evaluate
 
 
-# Deals with Logical operations,
-# must have two children
+# Deals with Logical operations
 class LogicalOp(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         firstChildEval = self.children[0].Evaluate(
@@ -83,6 +81,7 @@ class LogicalOp(Node):
         return evaluate
 
 
+# Deals with Bitwise operations
 class BitOp(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         firstChildEval = self.children[0].Evaluate(
@@ -109,7 +108,6 @@ class BitOp(Node):
 
 
 # Deals with unary operations,
-# must have one child
 class UnOp(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         childEval = self.children[0].Evaluate(
@@ -166,8 +164,8 @@ class Assign(Node):
         )
 
 
-# Contary to the Assign object, Identifier used to get
-# an identifier's value from the Symbol Table
+# Contrary to the Assign object, the Identifier is used to get
+# a variable's value from the Symbol Table
 class Identifier(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         varAddress = symbolTable.get(self.value)
@@ -201,6 +199,7 @@ class If(Node):
 
 class While(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
+        # these act like flags from assembly
         w_body_block = builder.append_basic_block("w_body")
         w_after_block = builder.append_basic_block("w_after")
 
@@ -231,11 +230,13 @@ class While(Node):
 
 class For(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
+        # declare variable for (var i = 0; ...)
         self.children[0].Evaluate(symbolTable, builder, builtInFunctions, module)
 
         w_body_block = builder.append_basic_block("w_body")
         w_after_block = builder.append_basic_block("w_after")
 
+        # check condition for (...; i < 10; ...)
         conditionalChildEval = self.children[1].Evaluate(
             symbolTable, builder, builtInFunctions, module
         )
@@ -250,7 +251,7 @@ class For(Node):
 
         # code to execute
         self.children[3].Evaluate(symbolTable, builder, builtInFunctions, module)
-        # increment of the declared variable
+        # increment of the declared variable for(...;...; i = i + 1)
         self.children[2].Evaluate(symbolTable, builder, builtInFunctions, module)
 
         conditionalChildEval = self.children[1].Evaluate(
@@ -271,6 +272,7 @@ class Pow(Node):
         secondChildEval = self.children[1].Evaluate(
             symbolTable, builder, builtInFunctions, module
         )
+        # calls for the builtIn pow function, defined on CodeGen.py
         power = builtInFunctions["pow"]
         return builder.call(power, [firstChildEval, secondChildEval])
 
@@ -284,8 +286,9 @@ class Print(Node):
         )
 
         printf, printf_global_fmt, voidptr_ty = builtInFunctions["printf"]
+        # bitcast to get the pointer reference for the format string printf("%d", i);
         fmt_arg = builder.bitcast(printf_global_fmt, voidptr_ty)
-        # Call Print Function
+        # Call Print Function, defined on CodeGen.py
         builder.call(printf, [fmt_arg, value])
 
 
@@ -296,6 +299,7 @@ class Read(Node):
         scanf, global_scanf_fmt, voidptr_ty = builtInFunctions["scanf"]
         fmt_arg = builder.bitcast(global_scanf_fmt, voidptr_ty)
         varAddress = builder.alloca(ir.IntType(32), name="temp")
+        # Call sprintf Function, defined on CodeGen.py
         builder.call(scanf, [fmt_arg, varAddress])
         return builder.load(varAddress)
 
@@ -304,7 +308,7 @@ class Read(Node):
 # (instruction) is added as a child of block.
 # When each child is evaluated, Assigns and Identifiers are
 # being used to build the symbol table and eventualy
-# Print a result
+# print or return a result
 class Block(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         [
@@ -316,15 +320,20 @@ class Block(Node):
 class DeclareFunction(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
         i32 = ir.IntType(32)
+        # declaring a function consists in creating it's own builder
+        # and writing code with it
         if self.value != "main":
+            # check if function already exists
             if self.value in module.globals:
                 raise ValueError(f"Cannot redeclare function '{self.value}'")
+            # declare args based on what parser returned
             args = [i32 for i in range(len(self.children[0]))]
             genericFunc_ty = ir.FunctionType(i32, args)
             generic_func = ir.Function(module, genericFunc_ty, name=self.value)
             block = generic_func.append_basic_block("entry")
+            # creates this function's builder
             builder = ir.IRBuilder(block)
-
+            # allocate function arguments
             for i in range(len(generic_func.args)):
                 address = builder.alloca(i32, name=self.children[0][i])
                 builder.store(generic_func.args[i], address)
@@ -332,12 +341,14 @@ class DeclareFunction(Node):
 
             self.children[1].Evaluate(symbolTable, builder, builtInFunctions, module)
             if not symbolTable.contains("return"):
-                # functions with no return always return 0
+                # functions with no return always return 0 (aiming for simplicity here...)
                 builder.ret(ir.Constant(i32, 0))
             else:
                 symbolTable.dropReturn()
             return generic_func
         else:
+            # main function is already declared on CodeGen.py, so it's
+            # just necessary to evaluate its block
             self.children[1].Evaluate(symbolTable, builder, builtInFunctions, module)
             return
 
@@ -353,19 +364,25 @@ class Return(Node):
 
 class FunctionCall(Node):
     def Evaluate(self, symbolTable, builder, builtInFunctions, module):
+        # check if function exists
         if self.value not in module.globals:
             raise ValueError(f"tried to call inexistent function '{self.value}'")
 
+        # get the called function on the current module
+        # (modules are the since it's interpreting the same code/file)
         fun = module.globals[self.value]
         funcArgs = fun.args
+        # check if received args match expected args
         if len(funcArgs) != len(self.children):
             raise ValueError("Number of arguments mismatch")
 
         args = []
+        # pass received args down to the function
         for i in range(len(funcArgs)):
             childEval = self.children[i].Evaluate(
                 symbolTable, builder, builtInFunctions, module
             )
             args += [childEval]
 
+        # call the function
         return builder.call(fun, args)

@@ -26,7 +26,7 @@ class CodeGen:
     def _create_execution_engine(self):
         """
         Create an ExecutionEngine suitable for JIT code generation on
-        the host CPU.  The engine is reusable for an arbitrary number of
+        the host CPU. The engine is reusable for an arbitrary number of
         modules.
         """
         target = self.binding.Target.from_default_triple()
@@ -42,7 +42,7 @@ class CodeGen:
         voidptr_ty = ir.IntType(8).as_pointer()
         printf_ty = ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True)
         printf = ir.Function(self.module, printf_ty, name="printf")
-        # Declare argument list
+
         printf_fmt = "%d\n\0"
         c_printf_fmt = ir.Constant(
             ir.ArrayType(ir.IntType(8), len(printf_fmt)),
@@ -58,6 +58,7 @@ class CodeGen:
 
         self.builtInFunctions["printf"] = (printf, printf_global_fmt, voidptr_ty)
 
+        # Declare scanf function
         scanf_ty = ir.FunctionType(ir.IntType(32), [voidptr_ty], var_arg=True)
         scanf = ir.Function(self.module, scanf_ty, name="scanf")
         scanf_fmt = "%d\00"
@@ -143,7 +144,7 @@ class CodeGen:
             pmb.populate(pm)
             pm.run(mod)
         mod.verify()
-        # Now add the module and make sure it is ready for execution
+        # add the module and make sure it is ready for execution
         self.engine.add_module(mod)
         self.engine.finalize_object()
         self.engine.run_static_constructors()
