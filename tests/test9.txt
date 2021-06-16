@@ -1,0 +1,15 @@
+funzione piu(x, y)
+{
+    ritorna x + y;
+}
+
+funzione aaaaaaaaaaaaaaaaaaaaaaa(x, y, z)
+{
+    ritorna (x + y + z)**2;
+}
+
+funzione main()
+{
+    stampa(piu(7+8, 5));
+    stampa(aaaaaaaaaaaaaaaaaaaaaaa(1, 2, 3));
+}

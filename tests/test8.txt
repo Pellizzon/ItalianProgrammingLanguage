@@ -1,0 +1,9 @@
+funzione piu(x, y)
+{
+    ritorna x + y;
+}
+
+funzione main()
+{
+    stampa(piu(7+8, 5));
+}
